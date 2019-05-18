@@ -257,6 +257,297 @@ Object.prototype.toString.call(document) ; // [object HTMLDocument]
 Object.prototype.toString.call(window) ; //[object global] window是全局对象global的引用
 ```
 
+#### 常见js类型转换
+
+##### 一、字符串转数字
+
+js提供了parseInt()和parseFloat()两个转换函数。前者把值转换成整数，后者把值转换成浮点数。只有对String类型调用这些方法，这两个函数才能正确运行；对其他类型返回的都是NaN(Not a Number)。
+ 一些示例如下：
+
+```js
+parseInt("1234blue"); //returns 1234
+parseInt("blue1234"); //returns NaN
+parseInt("0xA"); //returns 10
+parseInt("22.5"); //returns 22
+parseInt("blue"); //returns NaN
+parseInt("123");//123
+parseInt("+123");//123
+parseInt("-123");//-123
+parseInt("-12.3元")//-12
+parseInt("abc");//NaN
+parseInt([1,2])//1
+parseInt([1,2,4])//1
+parseInt("  ");//NaN
+```
+
+parseInt()方法还有基模式，可以把二进制、八进制、十六进制或其他任何进制的字符串转换成整数。基是由parseInt()方法的第二个参数指定的，示例如下：
+
+```js
+parseInt("AF", 16); //returns 175
+parseInt("10", 2); //returns 2
+parseInt("10", 8); //returns 8
+parseInt("10", 10); //returns 10
+//如果十进制数包含前导0，那么最好采用基数10，这样才不会意外地得到八进制的值。例如：
+parseInt("010"); //returns 8
+parseInt("010", 8); //returns 8
+parseInt("010", 10); //returns 10
+```
+
+parseFloat()方法与parseInt()方法的处理方式相似。
+ 使用parseFloat()方法的另一不同之处在于，字符串必须以十进制形式表示浮点数，parseFloat()没有基模式。
+
+```js
+parseFloat("1234blue"); //returns 1234.0
+parseFloat("0xA"); //returns NaN
+parseFloat("22.5"); //returns 22.5
+parseFloat("22.34.5"); //returns 22.34
+parseFloat("0908"); //returns 908
+parseFloat("blue"); //returns NaN
+parseFloat("123");//123
+parseFloat("-123");//-123
+parseFloat("+123");//123
+parseFloat("12.34");//12.34
+parseFloat("12.35元")//12.35
+parseFloat("12.23.122");//12.23
+parseFloat("av");//NaN
+parseFloat("0xAA");//0
+parseFloat("0110");//110
+parseFloat([1]);//1
+parseFloat([2,3]);//2
+parseFloat([]);//NaN
+parseFloat(null)//NaN
+parseFloat(undefined)//NaN
+```
+
+强制类型转换Number(value)——把给定的值转换成数字（可以是整数或浮点数），与parseInt()和parseFloat()方法的处理方式相似，只是它转换的是整个值，而不是部分值。
+
+```js
+Number(false) 0
+Number(true) 1
+Number(undefined) NaN
+Number(null) 0
+Number( "5.5 ") 5.5
+Number( "56 ") 56
+Number( "5.6.7 ") 报错
+Number(100) //100
+Number("123");//123
+Number("+123");//123
+Number("12.3");//12.3
+Number(" ");//0
+Number("abc");//NaN
+Number([]);//0
+Number([1]);//1
+Number([1,2]);//NaN
+Number(new Object());//NaN
+```
+
+##### 二、 字符串、数组互转
+
+1. ###### 字符串=>数组
+
+    split() 方法用于把一个字符串分割成字符串数组。
+
+```
+var str="How,are,you,doing,today";
+var n=str.split(",");//n=['How','are','you','doing','today']
+```
+
+1. ###### 数组=>字符串
+
+    toString() 方法可把数组转换为字符串，并返回结果。
+
+```
+var fruits = ["Banana", "Orange", "Apple", "Mango"];
+fruits.toString();//'Banana,Orange,Apple,Mango'
+```
+
+##### 三、js隐式类型转换
+
+js中的不同的数据类型之间的比较转换规则如下：
+
+###### 1. 对象和布尔值比较
+
+**对象和布尔值进行比较时，对象先转换为字符串，然后再转换为数字，布尔值直接转换为数字**
+
+```js
+[] == true;  //false  []转换为字符串'',然后转换为数字0,true转换为数字1，所以为false
+```
+
+2. ###### 对象和字符串比较
+
+**对象和字符串进行比较时，对象转换为字符串，然后两者进行比较。**
+
+```js
+[1,2,3] == '1,2,3' // true  [1,2,3]转化为'1,2,3'，然后和'1,2,3'， so结果为true;
+```
+
+###### 3. 对象和数字比较
+
+**对象和数字进行比较时，对象先转换为字符串，然后转换为数字，再和数字进行比较。**
+
+```js
+[1] == 1;  // true  `对象先转换为字符串再转换为数字，二者再比较 [1] => '1' => 1 所以结果为true
+```
+
+###### 4. 字符串和数字比较
+
+**字符串和数字进行比较时，字符串转换成数字，二者再比较。**
+
+```js
+'1' == 1 // true
+```
+
+5. ###### 字符串和布尔值比较
+
+**字符串和布尔值进行比较时，二者全部转换成数值再比较。**
+
+```js
+'1' == true; // true 
+```
+
+6. ###### 布尔值和数字比较
+
+**布尔值和数字进行比较时，布尔转换为数字，二者比较。**
+
+```js
+true == 1 // true
+```
+
+
+![数据转换](https://upload-images.jianshu.io/upload_images/2791152-ba592aa9b81fe174.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+如图，任意两种类型比较时，如果不是同一个类型比较的话，则按如图方式进行相应类型转换，如对象和布尔比较的话，**对象 => 字符串 => 数值**    **布尔值 => 数值。**
+
+**7.如果比较的双方中有一方为 Number，一方为Object时，则会调用 valueOf 方法将Object转换为数字，然后进行比较。**
+
+```js
+1 == { valueOf: function() {return1;} }    // true 
+1 + { valueOf: function() {return1;} }    //2
+```
+
+需要强调的是，在 Javascript 中，只有 **空字符串、数字0、false、null、undefined 和 NaN** 这 6 个值为假之外，其他所有的值均为真值。
+
+说到 NaN，就不得不提一下 isNaN() 方法，isNaN() 方法自带隐式类型转换，该方法在测试其参数之前，**会先调用Number() 方法将其转换为数字**。所以 isNaN('1') 这个语句中明明用一个字符串去测试，返回值仍然为 false 也就不足为怪了。
+
+8.在 + 号运算中,**数字/字符串+对象**
+
+当字符串和对象进行 + 运算的时候，Javascript 会通过对象的 toString() 方法将其自身转换为字符串，然后进行连接操作。		
+
+```js
+"1" + { toString: function() {return 1;} } // "11"
+```
+
+之所以说它特殊，是因为当一个对象同时包含 toString() 和 valueOf() 方法的时候，运算符 + 应该调用哪个方法并不明显(做字符串连接还是加法应该根据其参数类型，但是由于隐式类型转换的存在，类型并不显而易见。)，Javascript 会盲目的选择 valueOf() 方法而不是 toString() 来解决这个问题。这就意味着如果你打算对一个对象做字符串连接的操作，但结果却是......
+
+```js
+var obj = {
+    toString:function(){return "Object CustomObj"; },
+    valueOf:function(){return 1; }
+}
+console.log("Object: "+ obj);// "Object: 1"
+```
+
+隐式类型转换会给我们造成很多麻烦建议在所有使用条件判断的时候都使用全等运算符 **===** 来进行条件判断。全等运算符会先进行数据类型判断，并且不会发生隐式类型转换。
+
+来看一个有趣的题
+
+```js
+[] == false; //true
+![] == false;//true   空字符串(''),NaN,0，null,undefined**这几个外返回的都是true   []先转换为布尔值返回true
+console.log( !'' && !NaN && !0 && !null && !undefined) //true
+console.log(' ') //true
+```
+
+这两个的结果都是true,第一个是，对象 => 字符串 => 数值0 false转换为数字0,这个是true应该没问题，第二个前边多了个!，则直接转换为布尔值再取反，转换为布尔值时，**空字符串(''),NaN,0，null,undefined**，**false**这几个外返回的都是true, 所以! []这个[] => true 取反为false,所以[] == false为true。
+
+### 还有一些需要记住的，像：
+
+```js
+undefined == null //true undefined和null 比较返回true，二者和其他值比较返回false
+Number(null) //0
+```
+
+```js
+//if中的条件会被自动转为Boolean类型
+//会被转为false的数据
+if(false) console.log(2333)   //false
+if('') console.log(2333)      //false
+if(null) console.log(2333)    //false
+if(undefined) console.log(2333)  //false
+if(NaN) console.log(2333)         //false
+if(NaN) console.log(2333)         //false
+//会被转为true的数据
+if(true) console.log(2333) // true
+if('test') console.log(2333) // true
+if([]) console.log(2333) // true  ****
+if({}) console.log(2333) // true
+
+//参与+运算都会被隐式的转为字符串
+
+//会被转为空字符串的数据
+'str-' + '' // str-
+'str-' + []  // str-
+//会被转为字符串的数据
+'str-' + '1' // "str-1"
+'str-' + 1 // "str-1"
+'str-' + false // "str-false"
+'str-' + true // "str-true"
+'str-' + null // "str-null"
+'str-' + undefined // "str-undefined"
+'str-' + NaN // "str-NaN"
+//会被转为数据类型标记的数据
+'str-' + {} // "str-[object Object]"
+'str-' + {a:1} // "str-[object Object]"
+
+//参与*运算都会被隐式的转为数字
+//会被转为0的数据
+2 * '' // 0
+2 * '0' // 0
+2 * [] // 0
+2 * false // 0
+//会被转为1的数据
+2 * '1' // 2
+2 * [1] // 2
+2 * true // 2
+//会被转为NaN的数据
+2 * {} // NaN
+2 * {a:1} // NaN
+//== 运算符
+//为true的时候
+0 == false // true
+0 == '' // true
+0 == '0' // true
+0 == [] // true *****
+0 == [0] // true
+1 == true // true
+1 == '1' // true
+1 == [1] // true
+[1] == true // true
+[] == false // true
+//为false的时候
+0 == {} // false ***
+0 == null // false ***
+0 == undefined // false
+0 == NaN // false ***
+1 == {} // false
+1 == null // false
+1 == undefined // false
+1 == NaN // false
+[] == [] // false *** 两个对象 比较的是地址 地址不一样
+[1] == [1] // false  **
+[1] == {} // false
+[1] == {a:1} // false  **
+[1] == false // false  ***
+[1] == null // false
+[1] == undefined // false
+[1] == NaN // false
+{} == {} // false  两个对象 比较的是地址 地址不一样
+{a:1} == {a:1} // false 两个对象 比较的是地址 地址不一样
+//注：空数组[]，在+运算符下是转为空字符串''，在*运算符下是转为数字0。但在if语句中，则转为true。
+```
+
+
+
 ### 原型
 
 ###### 首先要搞明白几个概念：
@@ -2452,3 +2743,1136 @@ alert(b); // 1,2,2,3,4
 
 结论：slice()和concat()都并非深拷贝；
 
+### ES6
+
+#### 1.变量声明const和let
+
+在ES6之前，我们都是用`var`关键字声明变量。无论声明在何处，都会被视为声明在**函数的最顶部**(不在函数内即在**全局作用域的最顶部**)。这就是函数**变量提升**例如:
+
+```js
+  function aa() {
+    if(flag) {
+        var test = 'hello man'
+    } else {
+        console.log(test)
+    }
+  }
+```
+
+以上的代码实际上是：
+
+```js
+  function aa() {
+    var test // 变量提升，函数最顶部
+    if(flag) {
+        test = 'hello man'
+    } else {
+        //此处访问 test 值为 undefined
+        console.log(test)
+    }
+    //此处访问 test 值为 undefined
+  }
+```
+
+所以不用关心flag是否为 `true` or `false`。实际上，无论如何 test 都会被创建声明。
+
+接下来ES6主角登场：
+我们通常用 `let` 和 `const` 来声明，`let` 表示**变量**、`const` 表示**常量**。`let` 和 `const` 都是块级作用域。怎么理解这个块级作用域？
+
+- 在一个函数内部
+- 在一个代码块内部
+
+> 说白了只要在**{}花括号内**的代码块即可以认为 `let` 和 `const` 的作用域。
+
+看以下代码：
+
+```js
+  function aa() {
+    if(flag) {
+       let test = 'hello man'
+    } else {
+        //test 在此处访问不到
+        console.log(test)
+    }
+  }
+```
+
+**let的作用域是在它所在当前代码块，但不会被提升到当前函数的最顶部**。
+
+再来说说 `const`
+`const` 声明的变量必须提供一个值，而且会被认为是常量，意思就是它的值被设置完成后就不能再修改了。
+
+```js
+    const name = 'lux'
+    name = 'joe' // 再次赋值此时会报错
+```
+
+还有，如果 `const` 的是一个对象，对象所包含的值是可以被修改的。抽象一点儿说，就是对象所指向的地址不能改变，而变量成员是可以修改的。
+
+```js
+    const student = { name: 'cc' }
+    // 没毛病
+    student.name = 'yy'
+    // 如果这样子就会报错了
+    student  = { name: 'yy' }
+```
+
+说说TDZ(暂时性死区)，想必你早有耳闻。
+
+```js
+    {
+        console.log(value) // 报错
+        let value = 'lala'
+    }
+```
+
+我们都知道，JS引擎扫描代码时，如果发现变量声明，用 `var` 声明变量时会将声明提升到函数或全局作用域的顶部。但是 `let` 或者 `const`，会将声明关进一个小黑屋也是TDZ(暂时性死区)，只有执行到变量声明这句语句时，变量才会从小黑屋被放出来，才能安全使用这个变量。
+
+哦了，说一道面试题
+
+```js
+    var funcs = []
+    for (var i = 0; i < 10; i++) {
+        funcs.push(function() { console.log(i) })
+    }
+    funcs.forEach(function(func) {
+        func()
+    })
+```
+
+这样的面试题是大家很常见，很多同学一看就知道输出十次10
+但是如果我们想依次输出0到9呢？
+有两种解决方法，直接看一下代码：
+
+```
+    // ES5知识，我们可以利用“立即调用函数”解决这个问题
+    var funcs = []
+    for (var i = 0; i < 10; i++) {
+        funcs.push(
+          (function(value) {
+            return function() {
+                console.log(value)
+            }
+        })(i)
+      )
+    }
+    funcs.forEach(function(func) {
+        func()
+    })
+  // 再来看看es6怎么处理的
+    const funcs = []
+    for (let i = 0; i < 10; i++) {
+        funcs.push(function() {
+            console.log(i)
+        })
+    }
+    funcs.forEach(func => func())
+```
+
+达到相同的效果，ES6 简洁的解决方案是不是更让你心动！！！
+
+#### 2.字符串
+
+ES6模板字符简直是开发者的福音啊，解决了 ES5 在字符串功能上的痛点。
+
+**第一个用途**，**基本的字符串格式化**。将表达式嵌入字符串中进行拼接。用${}来界定。
+
+```js
+    //ES5 
+    var name = 'lux'
+    console.log('hello' + name)
+    //es6
+    const name = 'lux'
+    console.log(`hello ${name}`) //hello lux
+    
+```
+
+**第二个用途**，在ES5时我们通过反斜杠(\)来做多行字符串或者字符串一行行拼接。ES6反引号(``)直接搞定。
+
+```js
+    // ES5
+    var msg = "Hi \
+    man!
+    "
+    // ES6
+    const template = `<div>
+        <span>hello world</span>
+    </div>`
+```
+
+对于字符串 ES6+ 当然也提供了很多厉害也很有意思的方法😊 说几个常用的。
+
+```js
+    // 1.includes：判断是否包含然后直接返回布尔值
+    const str = 'hahay'
+    console.log(str.includes('y')) // true
+
+    // 2.repeat: 获取字符串重复n次
+    const str = 'he'
+    console.log(str.repeat(3)) // 'hehehe'
+    //如果你带入小数, Math.floor(num) 来处理
+    // s.repeat(3.1) 或者 s.repeat(3.9) 都当做成 s.repeat(3) 来处理
+
+    // 3. startsWith 和 endsWith 判断是否以 给定文本 开始或者结束
+    const str =  'hello world!'
+    console.log(str.startsWith('hello')) // true
+    console.log(str.endsWith('!')) // true
+    
+    // 4. padStart 和 padEnd 填充字符串，应用场景：时分秒
+    setInterval(() => {
+        const now = new Date()
+        const hours = now.getHours().toString()
+        const minutes = now.getMinutes().toString()
+        const seconds = now.getSeconds().toString()
+        console.log(`${hours.padStart(2, 0)}:${minutes.padStart(2, 0)}:${seconds.padStart(2, 0)}`)
+    }, 1000)
+```
+
+关于模板字符串现在比较常出现的面试题有两道。同学们不妨写试试看？
+
+- **模拟一个模板字符串的实现。**
+
+```js
+    let address = '北京海淀区'
+    let name = 'lala'
+    let str = `${name}在${address}上班...`
+    // 模拟一个方法 myTemplate(str) 最终输出 'lala在北京海淀区上班...'
+    function myTemplate(str) {
+        // try it
+    }
+    console.log(myTemplate(str)) // lala在北京海淀区上班...
+```
+
+- **实现标签化模板(自定义模板规则)。**
+
+```js
+    const name = 'cc'
+    const gender = 'male'
+    const hobby = 'basketball'
+    // 实现tag最终输出 '姓名：**cc**，性别：**male**，爱好：**basketball**'
+    function tag(strings) {
+        // do it
+    }
+    const str = tag`姓名：${name}，性别：${gender}，爱好：${hobby}`
+    console.log(str) // '姓名：**cc**，性别：**male**，爱好：**basketball**'
+```
+
+#### 3.函数
+
+**函数默认参数**
+
+在ES5我们给函数定义参数默认值是怎么样？
+
+```js
+    function action(num) {
+        num = num || 200
+        //当传入num时，num为传入的值
+        //当没传入参数时，num即有了默认值200
+        return num
+    }
+```
+
+但细心观察的同学们肯定会发现，num传入为0的时候就是false，但是我们实际的需求就是要拿到num = 0，此时num = 200 明显与我们的实际想要的效果明显不一样
+
+ES6为参数提供了默认值。在定义函数时便初始化了这个参数，以便在参数没有被传递进去时使用。
+
+```js
+    function action(num = 200) {
+        console.log(num)
+    }
+    action(0) // 0
+    action() //200
+    action(300) //300
+```
+
+**箭头函数**
+
+ES6很有意思的一部分就是函数的快捷写法。也就是箭头函数。
+
+箭头函数最直观的三个特点。
+
+- 不需要 `function` 关键字来创建函数
+- 省略 `return` 关键字
+- 继承当前上下文的 `this` 关键字
+
+```js
+//例如：
+    [1,2,3].map(x => x + 1)
+    
+//等同于：
+    [1,2,3].map((function(x){
+        return x + 1
+    }).bind(this))
+```
+
+**说个小细节。**
+
+当你的函数**有且仅有**一个参数的时候，是可以省略掉括号的。当你函数返回**有且仅有**一个表达式的时候可以省略{} 和 return；例如:
+
+```js
+    var people = name => 'hello' + name
+    //参数name就没有括号
+```
+
+作为参考
+
+```
+    var people = (name, age) => {
+        const fullName = 'hello' + name
+        return fullName
+    } 
+    //如果缺少()或者{}就会报错
+```
+
+要不整一道笔试题？哈哈哈哈哈哈哈哈。我不管我先上代码了
+
+```js
+    // 请使用ES6重构以下代码
+    
+    var calculate = function(x, y, z) {
+      if (typeof x != 'number') { x = 0 }
+      if (typeof y != 'number') { y = 6 }
+
+      var dwt = x % y
+      var result
+
+      if (dwt == z) { result = true }
+      if (dwt != z) { result = false }
+      
+      return result
+    }
+    const calculate = (x, y, z) => {
+      x = typeof x !== 'number' ? 0 : x
+      y = typeof y !== 'number' ? 6 : y
+      return x % y === z
+    }
+```
+
+#### 4.拓展的对象功能
+
+对象初始化简写
+
+ES5我们对于对象都是以**键值对**的形式书写，是有可能出现键值对重名的。例如：
+
+```js
+    function people(name, age) {
+        return {
+            name: name,
+            age: age
+        };
+    }
+```
+
+键值对重名，ES6可以简写如下：
+
+```js
+    function people(name, age) {
+        return {
+            name,
+            age
+        };
+    }
+```
+
+ES6 同样改进了为对象字面量方法赋值的语法。ES5为对象添加方法：
+
+```
+    const people = {
+        name: 'lux',
+        getName: function() {
+            console.log(this.name)
+        }
+    }
+```
+
+ES6通过省略冒号与 `function` 关键字，将这个语法变得更简洁
+
+```js
+    const people = {
+        name: 'lux',
+        getName () {
+            console.log(this.name)
+        }
+    }
+```
+
+**ES6 对象提供了 `Object.assign()`这个方法来实现浅复制。**
+`Object.assign()` 可以把任意多个源对象**自身可枚举**的属性拷贝给目标对象，然后返回目标对象。第一参数即为目标对象。在实际项目中，我们为了不改变源对象。一般会把目标对象传为{}
+
+```js
+    const objA = { name: 'cc', age: 18 }
+    const objB = { address: 'beijing' }
+    const objC = {} // 这个为目标对象
+    const obj = Object.assign(objC, objA, objB)
+
+    // 我们将 objA objB objC obj 分别输出看看
+    console.log(objA)   // { name: 'cc', age: 18 }
+    console.log(objB) // { address: 'beijing' }
+    console.log(objC) // { name: 'cc', age: 18, address: 'beijing' }
+    console.log(obj) // { name: 'cc', age: 18, address: 'beijing' }
+
+    // 是的，目标对象ObjC的值被改变了。
+    // so，如果objC也是你的一个源对象的话。请在objC前面填在一个目标对象{}
+    Object.assign({}, objC, objA, objB)
+```
+
+#### 5.更方便的数据访问--解构
+
+数组和对象是JS中最常用也是最重要表示形式。为了简化提取信息，ES6新增了**解构**，这是将一个数据结构分解为更小的部分的过程
+
+ES5我们提取对象中的信息形式如下：
+
+```js
+    const people = {
+        name: 'lux',
+        age: 20
+    }
+    const name = people.name
+    const age = people.age
+    console.log(name + ' --- ' + age)
+```
+
+是不是觉得很熟悉，没错，在ES6之前我们就是这样获取对象信息的，一个一个获取。现在，解构能让我们从对象或者数组里取出数据存为变量，例如
+
+```js
+    //对象
+    const people = {
+        name: 'lux',
+        age: 20
+    }
+    const { name, age } = people
+    console.log(`${name} --- ${age}`)
+    //数组
+    const color = ['red', 'blue']
+    const [first, second] = color
+    console.log(first) //'red'
+    console.log(second) //'blue'
+```
+
+要不来点儿面试题，看看自己的掌握情况？
+
+```js
+    // 请使用 ES6 重构一下代码
+
+    // 第一题
+    var jsonParse = require('body-parser').jsonParse
+
+    // 第二题
+    var body = request.body
+    var username = body.username
+    var password = body.password
+    // 1.
+    import { jsonParse } from 'body-parser'
+    // 2. 
+    const { body, body: { username, password } } = request
+```
+
+#### 6.Spread Operator 展开运算符
+
+ES6中另外一个好玩的特性就是Spread Operator 也是三个点儿...接下来就展示一下它的用途。
+
+组装对象或者数组
+
+```js
+    //数组
+    const color = ['red', 'yellow']
+    const colorful = [...color, 'green', 'pink']
+    console.log(colorful) //[red, yellow, green, pink]
+    
+    //对象
+    const alp = { fist: 'a', second: 'b'}
+    const alphabets = { ...alp, third: 'c' }
+    console.log(alphabets) //{ "fist": "a", "second": "b", "third": "c"
+}
+```
+
+有时候我们想获取数组或者对象除了前几项或者除了某几项的其他项
+
+```js
+    //数组
+    const number = [1,2,3,4,5]
+    const [first, ...rest] = number
+    console.log(rest) //2,3,4,5
+    //对象
+    const user = {
+        username: 'lux',
+        gender: 'female',
+        age: 19,
+        address: 'peking'
+    }
+    const { username, ...rest } = user
+    console.log(rest) //{"address": "peking", "age": 19, "gender": "female"
+}
+```
+
+对于 Object 而言，还可以用于组合成新的 Object 。(ES2017 stage-2 proposal) 当然如果有重复的属性名，右边覆盖左边
+
+```js
+    const first = {
+        a: 1,
+        b: 2,
+        c: 6,
+    }
+    const second = {
+        c: 3,
+        d: 4
+    }
+    const total = { ...first, ...second }
+    console.log(total) // { a: 1, b: 2, c: 3, d: 4 }
+```
+
+#### 7.import 和 export
+
+import导入模块、export导出模块
+
+```js
+//全部导入
+import people from './example'
+
+//有一种特殊情况，即允许你将整个模块当作单一对象进行导入
+//该模块的所有导出都会作为对象的属性存在
+import * as example from "./example.js"
+console.log(example.name)
+console.log(example.age)
+console.log(example.getName())
+
+//导入部分
+import {name, age} from './example'
+
+// 导出默认, 有且只有一个默认
+export default App
+
+// 部分导出
+export class App extend Component {};
+```
+
+以前有人问我，导入的时候有没有大括号的区别是什么。下面是我在工作中的总结：
+
+```js
+1.当用export default people导出时，就用 import people 导入（不带大括号）
+
+2.一个文件里，有且只能有一个export default。但可以有多个export。
+
+3.当用export name 时，就用import { name }导入（记得带上大括号）
+
+4.当一个文件里，既有一个export default people, 又有多个export name 或者 export age时，导入就用 import people, { name, age } 
+
+5.当一个文件里出现n多个 export 导出很多模块，导入时除了一个一个导入，也可以用import * as example
+```
+
+#### 8. Promise
+
+> 在promise之前代码过多的回调或者嵌套，可读性差、耦合度高、扩展性低。通过Promise机制，扁平化的代码机构，大大提高了代码可读性；用同步编程的方式来编写异步代码，保存线性的代码逻辑，极大的降低了代码耦合性而提高了程序的可扩展性。
+
+**说白了就是用同步的方式去写异步代码。**
+
+发起异步请求
+
+```js
+    fetch('/api/todos')
+      .then(res => res.json())
+      .then(data => ({ data }))
+      .catch(err => ({ err }));
+```
+
+今天看到一篇关于面试题的很有意思。
+
+```js
+setTimeout(function() {
+    console.log(1) // 5
+}, 0);
+new Promise(function executor(resolve) {
+    console.log(2); // 1
+    for( var i=0 ; i<10000 ; i++ ) {
+        i == 9999 && resolve();
+    }
+    console.log(3); //2
+})
+.then(function() {
+console.log(4); //4
+})
+console.log(5); //3
+
+// 2 3 5 4 1
+```
+
+[Excuse me？这个前端面试在搞事！](https://zhuanlan.zhihu.com/p/25407758)  *********这道题不错
+
+#### 9.Generators
+
+生成器（ generator）是能返回一个**迭代器**的函数。**生成器函数也是一种函数**，最直观的表现就是比普通的function多了个星号*，在其函数体内可以使用yield关键字,有意思的是**函数会在每个yield后暂停**。
+
+这里生活中有一个比较形象的例子。咱们到银行办理业务时候都得向大厅的机器取一张排队号。你拿到你的排队号，机器并不会自动为你再出下一张票。也就是说取票机“暂停”住了，直到下一个人再次唤起才会继续吐票。
+
+OK。说说迭代器。**当你调用一个generator时，它将返回一个迭代器对象**。**这个迭代器对象拥有一个叫做next的方法来帮助你重启generator函数并得到下一个值**。next方法不仅返回值，它返回的对象具有两个属性：done和value。value是你获得的值，done用来表明你的generator是否已经停止提供值。继续用刚刚取票的例子，每张排队号就是这里的value，打印票的纸是否用完就这是这里的done。
+
+```js
+    // 生成器
+    function *createIterator() {
+        yield 1;
+        yield 2;
+        yield 3;
+    }
+    
+    // 生成器能像正规函数那样被调用，但会返回一个迭代器
+    let iterator = createIterator();
+    
+    console.log(iterator.next().value); // 1
+    console.log(iterator.next().value); // 2
+    console.log(iterator.next().value); // 3
+```
+
+那生成器和迭代器又有什么用处呢？
+
+围绕着生成器的许多兴奋点都与**异步编程**直接相关。异步调用对于我们来说是很困难的事，我们的函数并不会等待异步调用完再执行，你可能会想到用回调函数，（当然还有其他方案比如Promise比如Async/await）。
+
+**生成器可以让我们的代码进行等待。**就不用嵌套的回调函数。使用generator可以确保当异步调用在我们的generator函数运行一下行代码之前完成时暂停函数的执行。
+
+那么问题来了，咱们也不能手动一直调用next()方法，你需要一个能够调用生成器并启动迭代器的方法。就像这样子的
+
+```js
+    function run(taskDef) { //taskDef即一个生成器函数
+
+        // 创建迭代器，让它在别处可用
+        let task = taskDef();
+
+        // 启动任务
+        let result = task.next();
+    
+        // 递归使用函数来保持对 next() 的调用
+        function step() {
+    
+            // 如果还有更多要做的
+            if (!result.done) {
+                result = task.next();
+                step();
+            }
+        }
+    
+        // 开始处理过程
+        step();
+    
+    }
+```
+
+> 生成器与迭代器最有趣、最令人激动的方面，或许就是可创建外观清晰的异步操作代码。你不必到处使用回调函数，而是可以建立貌似同步的代码，但实际上却使用 yield 来等待异步操作结束。
+
+#### 10.数组方法
+
+##### 1.数组的创建
+
+1. **使用`Array`构造函数的方式**
+
+```js
+new Array();  // 创建一个数组
+new Array([size]);  // 创建一个数组并指定长度，注意不是上限，是长度
+new Array(element0, element1, ..., elementn);  // 创建一个数组并赋值
+
+const array = new Array();
+array[0] = '1';
+```
+
+1. **采用字面量的方法**
+
+```js
+const array = []; //创建一个空数组
+const array2 = [1, 2, 3]; //创建一个有三个元素的数组
+```
+
+在使用数组字面量表示法时，**不会调用`Array`构造函数**。
+
+##### 2.数组自带属性
+
+```js
+constructor // 返回创建数组对象的原型函数
+length // 返回数组对象的长度
+prototype // 可以增加数组的原型方法和属性
+```
+
+**关于数组的length属性**
+
+（1）关于数组的的`length`属性，**这个属性不是只读的，数组的该属性可读可写**；通过设置这个属性，可以从数组的末尾移除项或向数组中添加新项。
+
+```js
+// 将其 length 属性设置为 2 会移除最后一项结果再访问 colors[2]就会显示 undefined 了
+var colors = ["red", "blue", "green"];     // 创建一个包含 3 个字符串的数组 
+colors.length = 2; 
+console.log(colors[2]);                 //undefined
+```
+
+（2）如果将其 `length` 属性设置为大于数组 项数的值，则新增的每一项都会取得`undefined` 值。
+
+```js
+var colors = ["red", "blue", "green"];    // 创建一个包含 3 个字符串的数组 
+colors.length = 4; 
+console.log(colors[3]);                 //undefined
+```
+
+（3）利用 `length` 属性可以方便地在数组末尾添加新项。
+
+```js
+var colors = ["red", "blue", "green"];   // 创建一个包含 3 个字符串的数组 
+colors[colors.length] = "black";         //（在位置 3）添加一种颜色
+ colors[colors.length] = "brown";         //（在位置 4）再添加一种颜色
+```
+
+##### 3.检测是否为数组
+
+1. **使用`instanceof`方法**
+
+`instanceof` 用于判断一个变量是否是某个对象的实例
+
+```js
+const array = new Array();
+array instanceof Array; //true
+```
+
+2.**使用`constructor`属性**
+
+`constructor` 属性返回对创建此对象的数组函数的引用，就是返回对象相对应的构造函数。
+
+```js
+const array = new Array();
+array.constructor === Array; // true
+```
+
+**3.使用`isArray()`方法**
+
+对支持`isArray`的浏览器,直接使用`isArray`方法。
+
+```js
+const array = new Array();
+Array.isArray(array); //true
+```
+
+如果浏览器不支持`Array.isArray()`则需进行必要判断。
+
+```js
+/**
+ * 判断一个对象是否是数组，参数不是对象或者不是数组，返回false
+ *
+ * @param {Object} arg 需要测试是否为数组的对象
+ * @return {Boolean} 传入参数是数组返回true，否则返回false
+ */
+function isArray(arg) {
+    if (typeof arg === 'object') {
+        return Object.prototype.toString.call(arg) === '[object Array]';
+    }
+    return false;
+}
+```
+
+##### 4.数组元素的增加与删除
+
+1.  `array.push(e1, e2, ...eN)` 将一个或多个元素添加到数组的末尾，并返回新数组的长度。
+
+```js
+const array = [1, 2, 3];
+const length = array.push(4, 5);
+// array: [1, 2, 3, 4, 5]; length: 5
+```
+
+2.`array.unshift(e1, e2, ...eN)`将一个或多个元素添加到数组的开头，并返回新数组的长度。
+
+```js
+const array = [1, 2, 3];
+const length = array.unshift(4, 5);
+// array: [ 4, 5, 1, 2, 3]; length: 5
+```
+
+3. `array.pop()`从数组中删除最后一个元素，并返回最后一个元素的值，原数组的最后一个元素被删除。数组为空时返回`undefined`。
+
+```js
+const array = [1, 2, 3];
+const poped = array.pop();  
+// array: [1, 2]; poped: 3
+```
+
+4. `array.shift()`删除数组的第一个元素，并返回第一个元素，原数组的第一个元素被删除。数组为空时返回`undefined`。
+
+```js
+const array = [1, 2, 3];
+const shifted = array.shift();  
+// array: [2, 3]; shifted: 1
+```
+
+5.`array.splice(start[, deleteCount, item1, item2, ...])`从数组中添加/删除元素，**返回值是由被删除的元素组成的一个新的数组**，如果只删除了一个元素，则返回只包含一个元素的数组。如果没有删除元素，则返回空数组。
+
+**会改变原数组**
+
+> -  `start` 指定修改的开始位置（从0计数）。如果超出了数组的长度，则从数组末尾开始添加内容；如果是负值，则表示从数组末位开始的第几位（从1计数）。
+> -  `deleteCount` (可选)，从`start`位置开始要删除的元素个数。如果 `deleteCount` 是 0，则不移除元素。这种情况下，至少应添加一个新元素。如果`deleteCount`大于`start`之后的元素的总数，则从`start`后面的元素都将被删除（含第 `start` 位）。
+> -  `item1, item2, …`(可选)，要添加进数组的元素,从`start`位置开始。如果不指定，则 `splice()` 将只删除数组元素。
+
+```js
+const array = [1, 2, 3, 4, 5];
+
+const deleted = array.splice(2, 0, 6); // 在索引为2的位置插入6
+// array 变为 [1, 2, 6, 3, 4, 5]; deleted为[]
+```
+
+##### 5.数组与字符串的相互转化
+
+1. **数组转字符串**
+
+`array.join(separator=',')`将数组中的元素通过`separator`连接成字符串，并返回该字符串，separator默认为","。
+
+**返回字符串，不会改变原数组**
+
+```js
+const array = [1, 2, 3];
+let str = array.join(',');
+// str: "1,2,3"
+```
+
+`toLocaleString()`、`toString()`、`valueOf()`：所有对象都具有这三个方法，数组继承的这个三个方法，可以看作是`join()`的特殊用法，不常用。
+
+```js
+var colors = ["red", "blue", "green"];   
+// 调用数组的 toString()方法会返回由数组中每个值的字符串形式拼接而成的一个以逗号分隔的字符串
+console.log(colors.toString());     // red,blue,green
+// 调用 valueOf()返回的还是数组
+console.log(colors.valueOf());      // ["red", "blue", "green"]
+console.log(colors.toLocaleString()); //  red,blue,green
+```
+
+如果数组中的某一项的值是 `null` 或者 `undefined`，那么该值在`join()`、 `toLocaleString()`、`toString()`和 `valueOf()`方法返回的结果中以**空字符串**表示。
+
+2.**字符串转数组**
+
+> `string.split(separator,howmany)`用于把一个字符串分割成字符串数组。
+>  `separator` (必需)，字符串或正则表达式，从该参数指定的地方对字符串进行分割。
+>  `howmany` (可选)，该参数可指定返回的数组的最大长度。
+
+```js
+let str = "abc,abcd,aaa";
+let array = str.split(",");// 在每个逗号(,)处进行分解。
+// array: [abc,abcd,aaa]
+
+const array1 = "helloworld";
+let str1 = s1.split('');  
+//["h", "e", "l", "l", "o", "w", "o", "r", "l", "d"]
+```
+
+##### 6.数组的截取和合并
+
+1. 数组的截取 -  `array.slice(start, end)` 方法
+
+`slice()`通过索引位置，从数组中返回`start`下标开始，直到`end`下标结束（**不包括**）的新数组，该方法**不会修改原数组，只是返回一个新的子数组**。
+
+> -  `start` (必填)，设定新数组的起始位置（下标从0开始算起）；如果是负数，则表示从数组尾部开始算起（**-1 指最后一个元素**，-2 指倒数第二个元素，以此类推）。
+> -  `end` (可选)，设定新数组的结束位置；如果不填写该参数，默认到数组结尾；如果是负数，则表示从数组尾部开始算起（-1 指最后一个元素，-2
+>    指倒数第二个元素，以此类推）。
+
+```js
+// 获取仅包含最后一个元素的子数组
+let array = [1,2,3,4,5];
+array.slice(-1); // [5]
+
+// 获取不包含最后一个元素的子数组
+let array2 = [1,2,3,4,5];
+array2.slice(0, -1); // [1,2,3,4]
+```
+
+**该方法并不会修改数组，而是返回一个子数组。如果想删除数组中的一段元素，应该使用方法 array.splice()。**
+
+1. 数组的合并 - `array.concat([item1[, item2[, . . . [,itemN]]]])`方法
+
+`conact()`是将多个数组（也可以是字符串，或者是数组和字符串的混合）连接为一个数组，返回连接好的新的数组。**不改变原数组**
+
+```js
+const array = [1,2].concat(['a', 'b'], ['name'],7);
+// [1, 2, "a", "b", "name",7]
+```
+
+##### 7.数组元素的排序
+
+1.  `array.sort()`方法
+
+`sort()`方法用于对数组的元素进行排序，并**返回原数组**。如果不带参数，按照字符串`UniCode`码的顺序进行排序。
+
+```js
+const array = ['a', 'd', 'c', 'b'];
+array.sort();  //['a', 'b', 'c', 'd']
+```
+
+为`sort()`中传入排序规则函数可实现自定义排序。
+
+> 排序函数规则：(1)**传两个形参**；(2)**当返回值为正数时，交换传入两形参在数组中位置**。
+
+**按照数值大小进行排序-升序**
+
+```js
+[1, 8, 5].sort((a, b) => {
+  return a-b; // 从小到大排序
+});
+// [1, 5, 8]
+```
+
+**按照数值大小进行排序-降序**
+
+```js
+[1, 8, 5].sort((a, b) => {
+  return b-a; // 从大到小排序
+});
+// [8, 5, 1]
+```
+
+1.  `array.reverse()`方法
+    `reverse()` 方法将数组中**元素的位置颠倒**，第一个数组元素成为最后一个数组元素，最后一个数组元素成为第一个。**在原数组上操作，然后返回原数组**。
+
+```js
+let arr = [1,2,3,4,5]
+console.log(arr.reverse())    // [5,4,3,2,1]
+console.log(arr)    // [5,4,3,2,1]
+```
+
+**数组的sort()和reverse()方法都对原数组进行了修改，返回值是经过排序之后的数组。**
+
+##### 8.元素在数组中的位置
+
+1.  `indexOf()`与`lastIndexOf()` 
+
+> -  `indexOf(searchElement[, fromIndex = 0])` 方法返回某个指定的字符串值在字符串中**首次出现的位置**。
+> -  `lastIndexOf(searchElement[, fromIndex = 0])` 方法返回一个指定的字符串值**最后出现的位置**，在一个字符串中的指定位置从后向前搜索。
+> - 这两个方法都接受两个参数：`searchElement`：要查找的元素；`fromIndex`：开始查找的索引位置。
+> - 这两个方法**都返回查找的项在数组中的位置，或者在没找到的情况下返回-1**。
+
+```js
+[2, 9, 7, 8, 9].indexOf(9); // 1
+[2, 9, 7, 8, 9].lastIndexOf(9); // 4
+```
+
+1.  `find()` 与 `findIndex()` 
+
+(1) `find(callback[, thisArg])`方法，用于**找出第一个符合条件的数组元素**。它的参数是一个回调函数，所有数组成员依次执行该回调函数，直到找出第一个返回值为true的成员，然后返回该成员。如果没有符合条件的成员，则返回`undefined`。
+
+```js
+[1, 4, -5, 10].find((n) => n < 0)
+// -5
+```
+
+`find()`方法的回调函数可以接受三个参数，依次为当前的值、当前的位置和原数组。
+
+```js
+[1, 5, 10, 15].find(function(value, index, arr) {
+  return value > 9;
+}) // 10
+```
+
+(2) `findIndex(callback[, thisArg])`返回第一个符合条件的数组成员的位置，如果所有成员都不符合条件，则返回-1。
+
+```js
+[1, 5, 10, 15].findIndex(function(value, index, arr) {
+  return value > 9;
+}) // 2
+```
+
+这两个方法都可以接受第二个参数，用来绑定回调函数的`this`对象。
+
+```js
+function f(v){
+  return v > this.age;
+}
+let person = {name: 'John', age: 20};
+[10, 12, 26, 15].find(f, person);    // 26
+```
+
+1.  `includes(searchElement[, fromIndex = 0])`方法返回一个布尔值，表示某个数组是否包含给定的值。
+
+这个方法都接受两个参数：`searchElement`：要查找的元素；`fromIndex`：开始查找的索引位置。
+
+```js
+[1, 2, 3].includes(2)     // true
+[1, 2, 3].includes(3, 3);  // false
+[1, 2, 3].includes(3, -1); // true   node里报错
+```
+
+##### 9.数组的遍历与迭代
+
+1.  `array.filter(callback, thisArg)`方法使用指定的函数测试所有元素,并创建一个包含所有通过测试的元素的新数组。
+
+参数说明：
+
+> -  `callback` 用来测试数组的每个元素的函数，返回`true`表示保留该元素（通过测试），`false`则不保留。
+> -  `thisArg` 可选。执行 `callback` 时的用于 `this` 的值。
+
+```js
+// callback定义如下，三个参数： element:当前元素值；index：当前元素下标； array:当前数组
+function callback(element, index, array) {
+  // callback函数必须返回true或者false，返回true保留该元素，false则不保留。
+  return true || false;
+}
+
+const filtered = [1, 2, 3].filter(element => element > 1);
+// filtered: [2, 3];
+```
+
+1.  `array.every(callback[, thisArg])`方法检测数组中的每一个元素是否都通过了`callback`测试，全部通过返回`true`，否则返回`false`。
+
+```js
+// callback定义如下： element:当前元素值；index：当前元素下标； array:当前数组
+function callback(element, index, array) {
+  // callback函数必须返回true或者false告知every是否通过测试
+  return true || false;
+}
+
+let a = [1, 2, 3, 4, 5];
+let b = a.every((item) => {
+    return item > 0;
+});
+let c = a.every((item) => {
+    return item > 1;
+});
+console.log(b); // true
+console.log(c); // false
+```
+
+1.  `array.some(callback[, thisArg])`判断数组中是否包含可以通过`callback`测试的元素，与`every`不同的是，这里只要某一个元素通过测试，即返回`true`。`callback`定义同上。
+
+```js
+[2, 5, 8, 1, 4].some(item => item > 6);
+// true
+```
+
+1.  `array.map(callback[, thisArg])`方法返回一个由原数组中的每个元素调用`callback`函数后的返回值组成的新数组。
+
+```js
+let a = [1, 2, 3, 4, 5];
+
+let b = a.filter((item) => {
+    return item > 3;
+});
+console.log(b); // [4 ,5]
+
+let bb = [];
+a.map((item) => {
+    if (item > 3) {
+        bb.push(item);
+    }
+});
+console.log(bb);    // [4, 5]
+
+let bbb = a.map((item) => {
+    return item + 1;
+});
+console.log(bbb);   // [2, 3, 4, 5, 6]
+```
+
+1.  `array.forEach(callbak)`为数组的每个元素执行对应的方法。
+
+```js
+// callback定义如下： element:当前元素值；index：当前元素下标； array:当前数组
+
+let a = [1, 2, 3, 4, 5];
+
+let b = [];
+a.forEach((item) => {
+    b.push(item + 1);
+});
+console.log(b); // [2,3,4,5,6]
+```
+
+1. **遍历数组的方法：`entries()`、`values()`、`keys()**` 
+
+这三个方法都是返回一个遍历器对象，可用`for...of`循环遍历，唯一区别：`keys()`是对键名的遍历、`values()`对键值的遍历、`entries()`是对键值对的遍历。
+
+```js
+for(let item of ['a','b'].keys()){
+    consloe.log(item);
+    //0
+    //1
+}
+for(let item of ['a','b'].values()){
+    consloe.log(item);
+    //'a'
+    //'b'
+}
+let arr4 = [0,1];
+for(let item of arr4.entries()){
+    console.log(item);  
+    //  [0, 0]
+    //  [1, 1]
+}
+for(let [index,item] of arr4.entries()){
+    console.log(index+':'+item);
+    //0:0
+    //1:1
+}
+```
+
+1.  `array.reduce(callback[, initialValue])`方法返回针对数组每项调用`callback`函数后产生的累积值。
+
+```js
+const total = [0, 1, 2, 3].reduce((sum, value) => {
+  return sum + value;
+}, 0);
+// total is 6
+
+const flattened = [[0, 1], [2, 3], [4, 5]].reduce((a, b) => {
+  return a.concat(b);
+}, []);
+// flattened is [0, 1, 2, 3, 4, 5]
+```
+
+参数说明：`initialValue`：累加器初始值， `callback`函数定义如下：
+
+```js
+function callback(accumulator, currentValue, currentIndex, array) {
+}
+```
+
+以上`callback`的参数中`accumulator`代表累加器的值，初始化时，如果`initialValue`有值，则`accumulator`初始化的值为`initialValue`，整个循环从第一个元素开始；`initialValue`无值，则`accumulator`初始化的值为数组第一个元素的值，`currentValue`为数组第二个元素的值，整个循环从第二个元素开始。`initialValue`的数据类型可以是任意类型，不需要跟原数组内的元素值类型一致。
+
+```js
+const newArray = [{ name: 'aa', age: 1 }, { name: 'bb', age: 2 }, { name: 'cc', age: 3 }].reduce((arr, element) => {
+  if (element.age >= 2) {
+    arr.push(element.name);
+  }
+  return arr; 
+  // 必须有return，因为return的返回值会被赋给新的累加器，否则累加器的值会为undefined。
+}, []);
+// newArray is ["bb", "cc"];
+
+// 上面代码的同等写法：
+const newArray = [{ name: 'aa', age: 1 }, { name: 'bb', age: 2 }, { name: 'cc', age: 3 }].filter(element => element.age >= 2).map(item => item.name);
+// newArray is ["bb", "cc"];
+```
+
+##### 10.其他方法
+
+1.  `Array.from()`方法
+
+`Array.from()`方法是用于将类似数组的对象（**即有length属性的对象**）和可遍历对象转为真正的数组。
+ 比如，使用·Array.from()·方法，可以轻松将·JSON·数组格式转为数组。
+
+```js
+let arrayLike = {
+    '0': 'a',
+    '1': 'b',
+    '2': 'c',
+    length: 3
+};
+
+let arr2 = Array.from(arrayLike); // ['a', 'b', 'c']
+```
+
+1.  `Array.of()`方法
+
+`Array.of()`方法是将一组值转变为数组。
+
+```js
+let arr0 = Array.of(1,2,33,5);
+console.log(arr0);//[1,2,33,5]
+
+let arr1 = Array.of('你好','hello');
+console.log(arr1);//["你好", "hello"]
+```
+
+#### 11.class
+
+#### 12.set
+
+#### 总结
+
+ES6新特性远不止于此，但对于我们日常的开发来说。这算不上全部，但是能算得上是高频使用了。当然还有很有好玩有意思的特性。比如一些数组的新方法、class...等等。包括用set处理数组去重问题等等。我和我的小伙伴们都惊呆了!
