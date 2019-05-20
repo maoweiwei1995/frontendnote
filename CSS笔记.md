@@ -405,7 +405,7 @@ align-items
 - cengter：与交叉轴的中点对齐
 - space- between：与交叉轴的两端对齐，轴线之间的间隔平均分布
 - space-around：每跟轴线之间的距离相等所以轴线之间的间隔比与边框线之间的间隔大一倍
-- st retch：默认值，轴线占满整个交叉线
+- stretch：默认值，轴线占满整个交叉线
 
 #### item
 
@@ -421,7 +421,7 @@ align-items
 >
 > flex
 >
-> aligr-self
+> align-self
 
 下面我们来依次了解这些属性
 
