@@ -1,7 +1,3 @@
-var val = 12;
-function fun1(){
-    console. log(val);
-    var val = 20;
-    console.log(val);
-}
-fun1();
+var str = '￥998$888';
+var reg = /(?<!\$)\d+/;
+console.log(reg.exec(str)) //998

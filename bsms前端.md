@@ -436,7 +436,7 @@ str = str.replace(/-(\d+)/g,function(){
 
 通过replace方法获取url中的参数的方法
 
-```
+```js
 (function(pro){
     function queryString(){
         var obj = {},
@@ -469,7 +469,7 @@ str = str.replace(/-(\d+)/g,function(){
 
 - (?=exp) 这个简单理解就是说字符出现的**位置**的右边必须匹配到exp这个表达式。
 
-```
+```js
 var str = "i'm singing and dancing";
 var reg = /\b(\w+(?=ing\b))/g
 var res = str.match(reg);
@@ -489,7 +489,7 @@ reg中a(?=b)匹配字符串'abc' 字符串a的右边是b这个匹配没问题,�
 
 - (?!exp) 这个就是说字符出现的**位置**的右边不能是exp这个表达式。
 
-```
+```js
 var str = 'nodejs';
 var reg = /node(?!js)/;
 console.log(reg.test(str)) // false
@@ -497,7 +497,7 @@ console.log(reg.test(str)) // false
 
 - (?<=exp) 这个就是说字符出现的**位置**的前边是exp这个表达式。
 
-```
+```js
 var str = '￥998$888';
 var reg = /(?<=\$)\d+/;
 console.log(reg.exec(str)) //888
@@ -505,7 +505,7 @@ console.log(reg.exec(str)) //888
 
 - (?<!exp) 这个就是说字符出现的**位置**的前边不能是exp这个表达式。
 
-```
+```js
 var str = '￥998$888';
 var reg = /(?<!\$)\d+/;
 console.log(reg.exec(str)) //998
@@ -515,11 +515,7 @@ console.log(reg.exec(str)) //998
 
 ![Paste_Image.png](https://upload-images.jianshu.io/upload_images/2791152-a45fef5bcfabcf2e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-图片如果放大也看不清的话 [下载地址](https://github.com/chenermeng/blog/tree/master/img/)
-
 ## 事件类型
-
-
 
 ### HTTP 响应状态码（重点分析）
 
