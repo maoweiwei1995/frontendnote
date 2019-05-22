@@ -1,3 +1,6 @@
-var str = '￥998$888';
-var reg = /(?<!\$)\d+/;
-console.log(reg.exec(str)) //998
+var a = {},
+b = { key: 'b' },
+c = { key: 'c' };
+a[b] = 123;
+a[c] = 456;
+console.log(b+'')

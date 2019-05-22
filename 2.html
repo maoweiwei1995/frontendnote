@@ -6,48 +6,51 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <style>
-        .out {
-            border: 1px solid black;
-            height: 300px;
-            width:400px;
-            display:flex;
-            justify-content:space-around;
-            align-items:flex-end;
-        }
-        .in {
-            width:50px;
-        }
-        .in1 {
-            height: 30%;
-            background-color: #f00;
-        }
-        .in2 {
-            height: 80%;
-            background-color: #ddd;
-        }
-        .in3 {
-            height: 70%;
-            background-color: #0fd;
-        }
-        .in4 {
-            height: 60%;
-            background-color: #ff0;
-        }
-        .in5 {
-            height: 90%;
-            background-color: #234;
-        }
+    .outer {
+        width:200px;
+        height:120px;
+        background-color:white;
+        border-radius: 8px;
+        padding:10px;
+        border:1px black solid;
+        position: relative;
+    }
+    .text {
+        width:150px;
+        margin:0 auto;
+        text-align: center;
+        border:1px black solid;
 
-        
+    }
+    .text span{
+        display: inline-block;
+        margin: 10px 10px;
+    }
+    .button {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        margin-left: -65px;
+        width:130px;
+        text-align:center;
+        border:1px black solid;
+    }
+    .button button:nth-child(2) {
+        color:green;
+    }
     </style>
 </head>
 <body>
-    <div class="out">
-        <div class="in in1">sss</div>
-        <div class="in in2">sss</div>
-        <div class="in in3">sss</div>
-        <div class="in in4">sss</div>
-        <div class="in in5">sss</div>
+    <div class="outer">
+        <div class="text">
+            <span>hello</span>
+                <br/> 
+            <span>this is a model</span>  
+        </div>
+        <div class="button">
+            <button>取消</button>
+            <button>确定</button>
+        </div>
     </div>
 </body>
 </html>

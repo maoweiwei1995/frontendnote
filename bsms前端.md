@@ -1,6 +1,192 @@
-## 前端优化方案
+## 前端性能优化常用总结
+
+参考：<https://www.jianshu.com/p/fe32ef31deed>
+
+前端优化层出不穷，移动端大行其道的现在，我们可以说优化好移动端，PC端也将会更好。所以，我们可以综合以下图片进行一些分析，如图：
+
+![img](https:////upload-images.jianshu.io/upload_images/948614-1752f5c8993cc1a0.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/600/format/webp)
+
+优化
+
+图中已经对前端性能做了一些概括。但其实，我觉得我们可以将这个概括更加精准，扼要，丰富。所以，接下来我会从三个方面就前端性能进行总结：网络方面、DOM操作及渲染方面、数据方面。
+
+### 网络方面
+
+web应用，总是会有一部分的时间浪费在网络连接和资源下载方面。往往建立一次网络连接是需要时间成本的。而且浏览器同一时间所发送的网络请求数是有限的。所以，这个层面的优化可以从「减少请求数目」开始：
+
+1. **减少http请求**：在YUI35规则中也有提到，主要是优化js、css和图片资源三个方面，因为html是没有办法避免的。因此，我们可以做一下的几项操作：
+
+   1. 合并js文件
+
+   2. 合并css文件
+
+   3. 雪碧图的使用(css sprite)
+
+   4. 使用base64表示简单的图片
+
+   上述四个方法，前面两者我们可以使用webpack之类的打包工具进行打包；雪碧图的话，也有专门的制作工具；图片的编码是使用base64的，所以，对于一些简单的图片，例如空白图等，可以使用base64直接写入html中。
+
+回到之前网络层面的问题，除了减少请求数量来加快网络加载速度，往往整个资源的体积也是，平时我们会关注的方面。
+
+2. **减小资源体积**：可以通过以下几个方面进行实施：
+
+- gzip压缩
+- js混淆
+- css压缩
+- 图片压缩
+
+gzip压缩主要是针对html文件来说的，它可以将html中重复的部分进行一个打包，多次复用的过程。js的混淆可以有简单的压缩(将空白字符删除)、丑化(丑化的方法，就是将一些变量缩小)、或者可以使用php对js进行混淆加密。css压缩，就是进行简单的压缩。图片的压缩，主要也是减小体积，在不影响观感的前提下，尽量压缩图片，使用png等图片格式，减少矢量图、高清图等的使用。这样子的做法不仅可以加快网页显示，也能减少流量的损耗。
+
+除了以上两部分的操作之外，在网络层面我们还需要做好缓存工作。真正的性能优化来说，缓存是效率最高的一种，往往缩短的加载时间也是最大的。
+
+2. **缓存**：可以通过以下几个方面来描述：
+
+- DNS缓存
+- CDN部署与缓存
+- http缓存
+
+由于浏览器会在DNS解析步骤中消耗一定的时间，所以，对于一些高访问量网站来说，做好DNS的缓存工作，就会一定程度上提升网站效率。
+
+CDN缓存，CDN作为静态资源文件的分发网络，本身就已经提升了，网站静态资源的获取速度，加快网站的加载速度，同时也给静态资源做好缓存工作，有效的利用已缓存的静态资源，加快获取速度。
+
+http缓存，也是给资源设定缓存时间，防止在有效的缓存时间内对资源进行重复的下载，从而提升整体网页的加载速度。
+
+其实，网络层面的优化还有很多，特别是针对于移动端页面来说。众所周知，移动端对于网络的敏感度更加的高，除了目前的4G和WIFI之外，其他的移动端网络相当于弱网环境，在这种环境下，资源的缓存利用是相当重要的。而且，减少http的请求次数，也是至关重要的，移动端弱网环境下，对于http请求的时间也会增加。所以，我们可以看一下我们在移动端网络方面可以做的优化：
+
+1. **移动端优化**：使用以下几种方式来加快移动端网络方面的优化：
+
+   1. 使用长cache，减少重定向
+
+   2. 首屏优化，保证首屏加载数据小于14kb
+
+   3. 不滥用web字体
+
+   「使用长cache」，可以使得移动端的部分资源设定长期缓存，这样可以保证资源不用向服务器发送请求，来比较资源是否更新，从而避免304的情况。304重定向，在PC端或许并不会影响网页的加载速度，但是，在移动端网络不稳定的前提下，多一次请求，就多了一部分加载时间。
+
+   「首屏优化」，对于移动端来说是至关重要的。2s时间是用户的最佳体验，一旦超出这个时间，将会导致用户的流失。所以，针对移动端的网络情况，不可能在这么短时间内加载完成所有的网页资源，所以我们必须保证首屏中的内容被优先显示出来，而且基于TCP的慢启动和拥塞控制，第一个14kb的数据是非常重要的，所以需要保证首部加载数据能够小于14kb。
+
+   「不滥用web字体」，web字体的好处就是，可以代替某些图片资源，但是，在移动端过多的web字体的使用，会导致页面资源加载的繁重，所以，慎用web字体
+
+### 渲染和DOM操作方面
+
+首先，简单的聊一下优化渲染的重要性。在网页初步加载时，获取到HTML文件之后，最初的工作是构建DOM和构建CSSOM两个树，之后将他们合并形成渲染树，最后对其进行打印。我们可以通过图片来看一下，简单的过程：
+
+![img](https:////upload-images.jianshu.io/upload_images/5797628-b2cd3a2d463b05fd?imageMogr2/auto-orient/strip%7CimageView2/2/w/888/format/webp)
+
+DOM渲染
+
+这里整个过程拉出来写，具体可以再写一篇文章，恕我偷下懒，推荐一篇比较好的文章给大家吧。[浏览器渲染过程与性能优化](https://link.jianshu.com?t=https://juejin.im/post/59d489156fb9a00a571d6509)
+
+继续我们的话题，我们可以如何去缩短这个过程呢？可以从以下几个操作进行优化。
+
+1. **优化网页渲染**：
+
+   1. css的文件放在头部，js文件放在尾部或者异步
+
+   2. 尽量避免內联样式
+
+   css文件放在「头部加载」，可以保证解析DOM的同时，解析css文件。因为，CSS（外链或内联）会阻塞整个DOM的渲染，然而DOM解析会正常进行，所以将css文件放在头部进行解析，可以加快网页的构建速度。假设将其放在尾部，那时DOM树几乎构建，这时就得等到CSSOM树构建完成，才能够继续下面的步骤。
+
+   「js放在尾部」：js文件不同，将js文件放在尾部或者异步加载的原因是JS（外链或内联）会阻塞后续DOM的解析，后续DOM的渲染也将被阻塞，而且一旦js中遇到DOM元素的操作，很可能会影响。这方面可以推荐一篇文章——[异步脚本载入提高页面性能](https://link.jianshu.com?t=http://harttle.com/2016/05/18/async-javascript-loading.html)。
+
+   「避免使用内联样式」，可以有效的减少html的体积，一般考虑内联样式的时候，往往是样式本身体积比较小，往往加载网络资源的时间会大于它的时候。
+
+除了页面渲染层面的优化，当然最重要的就是DOM操作方面的优化，这部分的优化应该是最多的，而且也是平时开发可以注意的地方。如果开发前期明白这些原理，同时付诸实践的话，就可以在后期的性能完善上面少下很多功夫。那么，接下来我们可以来看一下具体的操作：
+
+2. **DOM操作优化**：
+
+- 避免在document上直接进行频繁的DOM操作
+- 使用classname代替大量的内联样式修改
+- 对于复杂的UI元素，设置position为absolute或fixed
+- 尽量使用css动画
+- 使用requestAnimationFrame代替setInterval操作
+- 适当使用canvas
+- 尽量减少css表达式的使用
+- 使用事件代理
+
+前面三个操作，其实都是希望『减少回流和重绘』。其实，进行一次DOM操作的代价是非常之大的，以前可以通过网页操作是否卡顿来进行判断，但是，现代浏览器的进步已经大大减少了这方面的影响。但是，我们还是需要清楚，如何去减少回流和重绘的问题。因为这里不想细说这方面的知识，想要了解的话，可以看这篇文章——[回流与重绘：CSS性能让JavaScript变慢？](https://link.jianshu.com?t=http://www.zhangxinxu.com/wordpress/2010/01/%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%EF%BC%9Acss%E6%80%A7%E8%83%BD%E8%AE%A9javascript%E5%8F%98%E6%85%A2%EF%BC%9F/)。这可是张鑫旭大大的一篇文章呦(^.^)。
+
+「尽量使用css动画」，是因为本身css动画比较简单，而且相较于js的复杂动画，浏览器本身对其进行了优化，使用上面不会出现卡顿等问题。「使用requestAnimationFrame代替setInterval操作」，相信大家都有所耳闻，setInterval定时器会有一定的延时，对于变动性高的动画来说，会出现卡顿现象。而requestAnimationFrame正好解决的整个问题。
+
+「适当使用canvas」，不得不说canvas是前端的一个进步，出现了它之后，前端界面的复杂性也随之提升了。一些难以完成的动画，都可以使用canvas进行辅助完成。但是，canvas使用频繁的话，会加重浏览器渲染的压力，同时导致性能的下降。所以，适当时候使用canvas是一个不错的建议。
+
+「尽量减少css表达式的使用」，这个在YUI规则中也被提到过，往往css的表达式在设计之初都是美好的，但在使用过程中，由于其频繁触发的特性，会拖累网页的性能，出现卡顿。因此在使用过程中尽量减少css表达式的使用，可以改换成js进行操作。「使用事件代理」：往往对于具备冒泡性质的事件来说，使用事件代理不失为一种好的方法。举个例子：一段列表都需要设定点击事件，这时如果你给列表中的每一项设定监听，往往会导致整体的性能下降，但是如果你给整个列表设置一个事件，然后通过点击定位目标来触发相应的操作，往往性能就会得到改善。
+
+DOM操作的优化，还有很多，当然也包括移动端的。这个会在之后移动端优化部分被提及，此处先卖个关子。上面我们概述了开始渲染的时候和DOM操作的时候的一些注意事项。接下来要讲的是一些小细节的注意，这些细节可能对于页面影响不大，但是一旦堆积多了，性能也会有所影响。
+
+1. **操作细节注意**：
+
+   - 避免图片或者frame使用空src
+   - 在css属性为0时，去掉单位
+   - 禁止图像缩放
+   - 正确的css前缀的使用
+   - 移除空的css规则
+   - 对于css中可继承的属性，如font-size，尽量使用继承，少一点设置
+   - 缩短css选择器，多使用伪元素等帮助定位
+
+   上述的一些操作细节，是平时在开发中被要求的，更可以理解为开发规范。(基本操作，坐下^_^)
+
+列举完基本操作之后，我们再来聊一下移动端在DOM操作方面的一些优化。
+
+1. **移动端优化**：
+
+   - 长列表滚动优化
+   - 函数防抖和函数节流
+   - 使用touchstart、touchend代替click
+   - HTML的viewport设置
+   - 开启GPU渲染加速
+
+   首先，长列表滚动问题，是移动端需要面对的，IOS尽量使用局部滚动，android尽量使用全局滚动。同时，需要给body添加上-webkit-overflow-scrolling: touch来优化移动段的滚动。如果有兴趣的同学，可以去了解一下ios和android滚动操作上的区别以及优化。
+
+   「防抖和节流」，设计到滚动等会被频繁触发的DOM事件，需要做好防抖和节流的工作。它们都是为了限制函数的执行频次，以优化函数触发频率过高导致的响应速度跟不上触发频率，出现延迟，假死或卡顿的现象。
+
+   > 介绍：**函数防抖**，当调用动作过n毫秒后，才会执行该动作，若在这n毫秒内又调用此动作则将重新计算执行时间；**函数节流**，预先设定一个执行周期，当调用动作的时刻大于等于执行周期则执行该动作，然后进入下一个新周期。
+
+   「touchstart、touchend代替click」，也是移动端比较常用的操作。click在移动端会有300ms延时，这应该是一个常识呗。(不知道的小伙伴该收藏一下呦)。这种方法会影响用户的体验。所以做优化时，最简单的方法就是使用touchstart或者touchend代替click。因为它们事件执行顺序是touchstart->touchmove->touchend->click。或者，使用fastclick或者zepto的tap事件代替click事件。
+
+   「HTML的viewport设置」，可以防止页面的缩放，来优化性能。
+
+   「开启GPU渲染加速」，小伙伴们一定听过CPU吧，但是这里的GPU不能和CPU混为一谈呦。GPU的全名是Graphics Processing Unit，是一种硬件加速方式。一般的css渲染，浏览器的渲染引擎都不会使用到它。但是，在3D渲染时，计算量较大，繁重，浏览器会开启显卡的硬件加速来帮助完成这些操作。所以，我们这里可以使用css中的translateZ设定，来欺骗浏览器，让其帮忙开启GPU加速，加快渲染进程。
+
+### 数据方面
+
+数据，也可以说是前端优化方面比较重要的一块内容。页面与用户的交互响应，往往伴随着数据交互，处理，以及ajax的异步请求等内容。所以，我们也可以来聊聊这一块的知识。首先是对于图片数据的处理：
+
+1. **图片加载处理**：
+
+   - 图片预加载
+   - 图片懒加载
+   - 首屏加载时进度条的显示
+
+   「图片预加载」，预加载的寓意就是提前加载内容。而图片的预加载往往会被用在图片资源比较大，即时加载时会导致很长的等待过程时，才会被使用的。常见场景：图片漫画展示时。往往会预加载一张到两张的图片。
+
+   「图片懒加载」，懒加载或许你是第一次听说，但是，这种方式在开发中会被经常使用。首先，我们需要明白一个道理：往往只有看到的资源是必须的，其他资源是可以随着用户的滚动，随即显示的。所以，特别是对于图片资源特别多的网站来说，做好图片的懒加载是可以大大提升网页的载入速度的。
+
+   > 常见的图片懒加载的方式就是：在最初给图片的src设置一个比较简单的图片，然后将图片的真实地址设置给自定义的属性，做一个占位，然后给图片设置监听事件，一旦图片到达视口范围，从图片的自定义属性中获取出真是地址，然后赋值给src，让其进行加载。
+
+   「首屏进度条的显示」：往往对于首屏优化后的数据量并不满意的话，同时也不能进一步缩短首屏包的长度了，就可以使用进度条的方式，来提醒用户进行等待。
+
+讲完了图片这一块数据资源的处理，往往我们需要去优化一下异步请求这一部分的内容。因为，异步的数据获取也是前端不可分割的。这一部分我们也可以做一定的处理：
+
+1. **异步请求的优化**：
+
+   - 使用正常的json数据格式进行交互
+   - 部分常用数据的缓存
+   - 数据埋点和统计
+
+   「JSON交互」，JSON的数据格式轻巧，结构简单，往往可以大大优化前后端的数据通信。
+
+   「常用数据的缓存」，可以将一些用户的基本信息等常用的信息做一个缓存，这样可以保证ajax请求的减少。同时，HTML5新增的storage的内容，也不用怕cookie暴露，引起的信息泄漏问题。
+
+   「数据埋点和统计」，对于资深的程序员来说，比较了解。而且目前的大部分公司也会做这方面的处理。有心的小伙伴可以自行查阅。
+
+最后，还有就是大量数据的运算。对于javascript语言来说，本身的单线程就限制了它并不能计算大量的数据，往往会造成页面的卡顿。而可能业务中有些复杂的UI需要去运行大量的运算，所以，**webWorker的使用**是至关重要的。或许，前端标准普及的落后，会导致大家对于这些新生事物的短暂缺失吧。
 
 ## 封装一个promise
+
+用css实现轮播图
+
+
 
 ## 正则表达式
 
@@ -515,7 +701,894 @@ console.log(reg.exec(str)) //998
 
 ![Paste_Image.png](https://upload-images.jianshu.io/upload_images/2791152-a45fef5bcfabcf2e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-## 事件类型
+## 事件
+
+### 一、事件
+
+**事件是文档或者浏览器窗口中发生的，特定的交互瞬间。**
+
+事件是用户或浏览器自身执行的某种动作，如click,load和mouseover都是事件的名字。
+
+事件是javaScript和DOM之间交互的桥梁。
+
+你若触发，我便执行——事件发生，调用它的处理函数执行相应的JavaScript代码给出响应。
+
+典型的例子有：页面加载完毕触发load事件；用户单击元素，触发click事件。
+
+### 二、事件流
+
+**事件流描述的是从页面中接收事件的顺序。**
+
+### 1、事件流感性认识
+
+问题：单击页面元素，什么样的元素能感应到这样一个事件？
+
+答案：单击元素的同时，也单击了元素的容器元素，甚至整个页面。
+
+例子：有三个同心圆， 给每个圆添加对应的事件处理函数，弹出对应的文字。单击最里面的圆，同时也单击了外面的圆，所以外面圆的click事件也会被触发。
+
+ 效果如下：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/010913358782848.png)](http://www.cnblogs.com/starof/p/4066381.html)
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/010913543944892.png)](http://www.cnblogs.com/starof/p/4066381.html)[ ![img](https://images0.cnblogs.com/blog/315302/201411/010915517849460.png)](http://www.cnblogs.com/starof/p/4066381.html)[ ![img](https://images0.cnblogs.com/blog/315302/201411/010916084409806.png)](http://www.cnblogs.com/starof/p/4066381.html)
+
+### 2、事件流
+
+**事件发生时会在元素节点与根节点之间按照特定的顺序传播**，**路径所经过的所有节点都会收到该事件，这个传播过程即DOM事件流。**
+
+#### 1、两种事件流模型
+
+事件传播的顺序对应浏览器的两种事件流模型：**捕获型事件流和冒泡型事件流**。
+
+**冒泡型事件流**：事件的传播是从**最特定**的**事件目标**到最不特定的**事件目标**。即从DOM树的**叶子到根**。**【推荐】**
+
+**捕获型事件流**：事件的传播是从**最不特定**的**事件目标**到最特定的**事件目标**。即从DOM树的**根到叶子**。
+
+事件捕获的思想就是不太具体的节点应该更早接收到事件，而最具体的节点最后接收到事件。
+
+```html
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div id="myDiv">Click me!</div>
+</body>
+</html>
+```
+
+上面这段html代码中，单击了页面中的<div>元素，
+
+在冒泡型事件流中click事件传播顺序为**<div>**—》**<body>**—》**<html>**—》**document**
+
+在捕获型事件流中click事件传播顺序为**document**—》**<html>**—》**<body>**—》**<div>**
+
+ ![img](https://images0.cnblogs.com/blog/315302/201411/010945436598199.png)![img](https://images0.cnblogs.com/blog/315302/201411/010945579257474.png)
+
+**note**:
+
+1）、**所有现代浏览器都支持事件冒泡**，但在具体实现中略有差别：
+
+IE5.5及更早版本中事件冒泡会跳过<html>元素(从body直接跳到document)。
+
+IE9、Firefox、Chrome、和Safari则将事件一直冒泡到window对象。
+
+2）、IE9、Firefox、Chrome、Opera、和Safari都支持事件捕获。尽管DOM标准要求事件应该从document对象开始传播，但这些浏览器都是从window对象开始捕获事件的。
+
+3）、由于老版本浏览器不支持，很少有人使用事件捕获。**建议使用事件冒泡**。
+
+#### **2、DOM事件流**
+
+**DOM标准采用捕获+冒泡**。两种事件流都会触发DOM的所有对象，从document对象开始，也在document对象结束。
+
+![img](https://images2015.cnblogs.com/blog/315302/201606/315302-20160621155328756-279009443.png)
+
+DOM标准规定事件流包括三个阶段：**事件捕获阶段、处于目标阶段和事件冒泡阶段**。
+
+- **事件捕获阶段**：**实际目标**（<div>）在捕获阶段**不会接收事件**。也就是在捕获阶段，事件从document到<html>再到<body>就停止了。上图中为1~3.
+- **处于目标阶段**：事件在<div>上发生并处理。**但是事件处理会被看成是冒泡阶段的一部分**。
+- **冒泡阶段**：事件又传播回文档。
+
+**note**:
+
+1）、尽管“DOM2级事件”标准规范明确规定事件捕获阶段不会涉及事件目标，但是在IE9、Safari、Chrome、Firefox和Opera9.5及更高版本都会在捕获阶段触发事件对象上的事件。结果，就是有两次机会在目标对象上面操作事件。
+
+2）、**并非所有的事件都会经过冒泡阶段** 。所有的事件都要经过捕获阶段和处于目标阶段，但是有些事件会跳过冒泡阶段：如，获得输入焦点的focus事件和失去输入焦点的blur事件。
+
+两次机会在目标对象上面操作事件例子：
+
+运行效果就是会陆续弹出6个框，为说明原理我整合成了一个图：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/052135036896502.png)](http://www.cnblogs.com/starof/p/4066381.html)
+
+### 3、事件流的典型应用事件代理
+
+传统的事件处理中，需要为**每个元素**添加事件处理器。js事件代理则是一种简单有效的技巧，通过它可以把事件处理器添加到**一个父级元素**上，从而避免把事件处理器添加到**多个子级元素**上。
+
+#### 1、事件代理
+
+事件代理的原理用到的就是**事件冒泡和目标元素**，**把事件处理器添加到父元素，等待子元素事件冒泡**，并且父元素能够通过target（IE为srcElement）判断是哪个子元素，从而做相应处理。
+
+事件代理的处理方式，代码如下：
+
+```html
+<body>
+<ul id="color-list">
+<li>red</li>
+<li>orange</li>
+<li>yellow</li>
+<li>green</li>
+<li>blue</li>
+<li>indigo</li>
+<li>purple</li>
+</ul>
+<script>
+(function(){
+    var colorList=document.getElementById("color-list");
+    colorList.addEventListener('click',showColor,false);
+    function showColor(e)
+    {
+        e=e||window.event;
+        var targetElement=e.target||e.srcElement;
+        if(targetElement.nodeName.toLowerCase()==="li"){
+        alert(targetElement.innerHTML);
+        }
+    }
+})();
+</script>
+</body>
+```
+
+#### 2、事件代理的好处***
+
+1. 将多个事件处理器减少到一个，因为事件处理器要驻留内存，这样就提高了性能。
+2. DOM更新无需重新绑定事件处理器，因为事件代理对不同子元素可采用不同处理方法。如果新增其他子元素（a,span,div等），直接修改事件代理的事件处理函数即可。
+
+#### 3、事件代理的问题：
+
+代码如下：事件代理同时绑定了li和span，当点击span的时候，li和span都会冒泡。
+
+```html
+<li><span>li中的span的内容</span></li>
+
+<script>
+    $(document).on('click', 'li', function(e){
+        alert('li li');
+    });
+
+    $(document).on('click', 'span', function(e){
+        alert('li span');
+    })
+</script>
+```
+
+解决办法：
+
+方法一：span的事件处理程序中阻止冒泡
+
+```js
+ $(document).on('click', 'span', function(e){
+        alert('li span');
+        e.stopPropagation();
+    })
+```
+
+方法二：li的事件处理程序中检测target元素
+
+```js
+ $(document).on('click', 'li', function (e) {
+        if (e.target.nodeName == 'SPAN') {
+            e.stopPropagation();
+            return;
+        }
+        alert('li li');
+    });
+```
+
+#### 4、事件代理的一个有趣应用
+
+点击一个列表时，输出对应的索引
+
+```html
+<script>
+    var ul=document.querySelector('ul');
+    var lis=ul.querySelectorAll('ul li');
+    ul.addEventListener('click', function (e) {
+        var target= e.target;
+        if(target.nodeName.toUpperCase()==='LI'){
+            alert([].indexOf.call(lis,target));
+        }
+    },false)
+</script>
+```
+
+### 三、事件处理程序
+
+前面提到，事件是用户或浏览器自身执行的某种动作，如click,load和mouseover都是事件的名字。响应某个事件的函数就叫**事件处理程序**（也叫**事件处理函数**、**事件句柄**）。事件处理程序的名字以"on"开头，因此click事件的事件处理程序就是onclick,load事件的事件处理程序就是onload。
+
+为事件指定事件处理程序的方法主要有3种。
+
+#### 1、html事件处理程序
+
+**事件直接加在html元素上。**
+
+首先，这种方法已经过时了。因为动作(javascript代码)和内容(html代码)紧密耦合，修改时即要修改html也要修改js。但是写个小demo的时候还是可以使用的。
+
+这种方式也有两种方法，都很简单：
+
+第一种：直接在html中定义事件处理程序及包含的动作。
+
+```html
+<input type="button" value="click me!" onclick="alert('clicked!')"/>
+```
+
+第二种：html中定义事件处理程序，执行的动作则调用其他地方定义的脚本。
+
+```html
+<input type="button" value="click me!" onclick="showMessage()"/>
+<script>
+function showMessage(){
+    alert("clicked!");
+}
+</script>
+```
+
+**note**:
+
+1）通过event变量可以直接访问事件本身，比如onclick="alert(event.type)"会弹出click事件。
+
+2）this值等于事件的目标元素，这里目标元素是input。比如 onclick="alert(this.value)"可以得到input元素的value值。
+
+#### 2、DOM0级事件处理程序
+
+**把一个函数赋值给一个事件处理程序属性。**
+
+这种方法简单而且跨浏览器，但是只能为一个元素添加一个事件处理函数。
+
+因为这种方法为元素添加多个事件处理函数，则后面的会覆盖前面的。
+
+**添加事件处理程序**：
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    myBtn.onclick=function(){
+        alert("clicked!");
+    }
+</script>
+```
+
+分析：
+
+```html
+/*
+第一步：myBtn=document.getElementById("myBtn");取得btn对象
+第二步：myBtn.onclick其实相当于给myBtn添加了一个onclick的属性。
+第三步：myBtn.onclick=function(){
+    alert("clicked!");
+}
+把函数赋值给onclick事件处理程序属性。
+*/
+```
+
+**删除事件处理程序**：
+
+```js
+    myBtn.onclick=null;
+```
+
+#### 3、DOM2级事件处理程序
+
+DOM2级事件处理程序可以为一个元素添加多个事件处理程序。其定义了两个方法用于添加和删除事件处理程序：**addEventListener()和removeEventListener()**。
+
+**所有的DOM节点都包含这2个方法。**
+
+这两个方法都需要3个参数：事件名，事件处理函数，布尔值。
+
+这个布尔值为true,在捕获阶段处理事件，为false，在冒泡阶段处理事件，**默认为false**。
+
+**添加事件处理程序**：现在为按钮添加两个事件处理函数，一个弹出“hello”,一个弹出“world”。
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    myBtn.addEventListener("click",function(){
+        alert("hello");
+    },false);
+    myBtn.addEventListener("click",function(){
+        alert("world");
+    },false);
+</script>
+```
+
+**删除事件处理程序**：通过addEventListener添加的事件处理程序必须通过removeEventListener删除，且参数一致。
+
+**note**:**通过addEventListener添加的匿名函数将无法删除。**下面这段代码将不起作用！
+
+```html
+    myBtn.removeEventListener("click",function(){
+        alert("world");
+    },false);
+```
+
+看似该removeEventListener与上面的addEventListener参数一致，实则第二个参数中匿名函数是完全不同的。
+
+所以为了能删除事件处理程序，代码可以这样写：
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    var handler=function(){
+        alert("hello");
+    }
+    myBtn.addEventListener("click",handler,false);
+    myBtn.removeEventListener("click",handler,false);
+</script>
+```
+
+### 四、IE事件处理程序
+
+#### 1、实际应用场景
+
+IE8及以下浏览器不支持addEventListener，在实际开发中如果要兼容到IE8及以下浏览器。如果用原生的绑定事件，需要做兼容处理，可利用jquery的bind代替。
+
+![img](https://images2015.cnblogs.com/blog/315302/201603/315302-20160323104308636-366856872.jpg)
+
+#### 2、IE8事件绑定
+
+IE8及以下版本浏览器实现了与DOM中类似的两个方法：attachEvent()和detachEvent()。
+
+这两个方法都需要两个参数：**事件处理程序名称**和**事件处理程序函数**。由于IE8及更早版本只支持事件冒泡，所以通过attachEvent()添加的事件处理程序都会被添加到冒泡阶段。注意是事件处理程序名称而不是事件名称，所以要加上on，是onclick而不是click。
+
+**note**:
+
+**IE11只支持addEventListener！**
+
+**IE9，IE10对attachEvent和addEventListener都支持！**
+
+**TE8及以下版本只支持attachEvent！**
+
+可以拿下面代码在IE各个版本浏览器中进行测试。
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    var handlerIE=function(){
+        alert("helloIE");
+    }
+    var handlerDOM= function () {
+        alert("helloDOM");
+    }
+    myBtn.addEventListener("click",handlerDOM,false);
+    myBtn.attachEvent("onclick",handlerIE);
+</script>
+```
+
+**添加事件处理程序**：现在为按钮添加两个事件处理函数，一个弹出“hello”,一个弹出“world”。
+
+```html
+<script>
+    var myBtn=document.getElementById("myBtn");
+    myBtn.attachEvent("onclick",function(){
+        alert("hello");
+    });
+    myBtn.attachEvent("onclick",function(){
+        alert("world");
+    });
+</script>
+```
+
+**note**:这里运行效果值得注意一下：
+
+IE8以下浏览器中先弹出“world”，再弹出“hello”。和DOM中事件触发顺序相反。
+
+IE9及以上浏览器先弹出“hello”，再弹出“world”。和DOM中事件触发顺序相同了。
+
+可见IE浏览器慢慢也走上正轨了。。。
+
+**删除事件处理程序**:通过attachEvent添加的事件处理程序必须通过detachEvent方法删除，且参数一致。
+
+和DOM事件一样，添加的匿名函数将无法删除。
+
+所以为了能删除事件处理程序，代码可以这样写：
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    var handler= function () {
+        alert("hello");
+    }
+    myBtn.attachEvent("onclick",handler);
+    myBtn.detachEvent("onclick",handler);
+</script>
+```
+
+**note**:IE事件处理程序中还有一个地方需要注意：**作用域**。
+
+使用attachEvent()方法，事件处理程序会在全局作用域中运行，因此this等于window。
+
+而dom2或dom0级的方法作用域都是在元素内部，this值为目标元素。
+
+下面例子会弹出true。
+
+```html
+<input id="myBtn" type="button" value="click me!"/>
+<script>
+    var myBtn=document.getElementById("myBtn");
+    myBtn.attachEvent("onclick",function(){
+        alert(this===window);
+    });
+</script>
+```
+
+在编写跨浏览器的代码时，需牢记这点。
+
+IE7\8检测：
+
+```js
+ //判断IE7\8 兼容性检测
+            var isIE=!!window.ActiveXObject;
+            var isIE6=isIE&&!window.XMLHttpRequest;
+            var isIE8=isIE&&!!document.documentMode;
+            var isIE7=isIE&&!isIE6&&!isIE8;
+             
+            if(isIE8 || isIE7){
+                li.attachEvent("onclick",function(){
+                    _marker.openInfoWindow(_iw);
+                })    
+            }else{
+                li.addEventListener("click",function(){
+                    _marker.openInfoWindow(_iw);
+                })
+            }
+```
+
+### 五、事件对象
+
+**什么是事件对象？在触发DOM上的事件时都会产生一个对象。**
+
+#### 1、认识事件对象
+
+事件在浏览器中是以对象的形式存在的，即event。触发一个事件，就会产生一个事件对象event，该对象**包含着所有与事件有关的信息**。包括导致事件的元素、事件的类型以及其他与特定事件相关的信息。
+
+例如：鼠标操作产生的event中会包含鼠标位置的信息；键盘操作产生的event中会包含与按下的键有关的信息。
+
+所有浏览器都支持event对象，但支持方式不同，在DOM中event对象必须作为唯一的参数传给事件处理函数，在IE中event是window对象的一个属性。
+
+#### 2、html事件处理程序中event
+
+```html
+<input id="btn" type="button" value="click" onclick=" console.log('html事件处理程序'+event.type)"/>
+```
+
+这样会创建一个包含局部变量event的函数。可通过event直接访问事件对象。
+
+3、DOM中的事件对象
+
+DOM0级和DOM2级事件处理程序都会把event作为参数传入。
+
+**根据习惯来：可以用e，或者ev或者event。**
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+    var btn=document.getElementById("btn");
+    btn.onclick=function(event){
+        console.log("DOM0 & click");
+        console.log(event.type);    //click
+    }
+    btn.addEventListener("click", function (event) {
+        console.log("DOM2 & click");
+        console.log(event.type);    //click
+    },false);
+</script>
+</body>
+```
+
+DOM中事件对象重要**属性和方法**。
+
+**属性**：
+
+- type属性，用于获取事件类型
+- target属性 用户获取事件目标 事件加在哪个元素上。（更具体target.nodeName）
+
+**方法**：
+
+- stopPropagation()方法 用于阻止事件冒泡
+- preventDefault()方法 阻止事件的默认行为 **移动端用的多**
+
+### 4、IE中的事件对象
+
+第一种情况： 通过DOM0级方法添加事件处理程序时，event对象作为window对象的一个属性存在。
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+    var btn=document.getElementById("btn");
+    btn.onclick= function () {
+        var event=window.event;
+       console.log(event.type); //click
+    }
+
+</script>
+</body>
+```
+
+第二种情况：通过attachEvent()添加的事件处理程序，event对象作为参数传入。
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+    var btn=document.getElementById("btn");
+    btn.attachEvent("onclick", function (type) {
+        console.log(event.type);    //click
+    })
+</script>
+</body>
+```
+
+ IE中事件对象重要**属性和方法**。
+
+属性：
+
+- type属性，用于获取事件类型(一样)
+- srcElement属性 用户获取事件目标 事件加在哪个元素上。（更具体target.nodeName）
+
+```js
+//兼容性处理
+function showMsg(event){
+    event=event||window.event;  //IE8以前必须是通过window获取event，DOM中就是个简单的传参
+    var ele=event.target || event.srcElement; //获取目标元素，DOM中用target,IE中用srcElement
+    alert(ele);
+ }
+e.stopPropagation()
+preventDefault()
+cancelBubble = true
+returnValue = false
+```
+
+- cancelBubble**属性** 用于阻止事件冒泡 IE中cancelBubble为属性而不是方法，true表示阻止冒泡。
+
+- returnValue**属性** 阻止事件的默认行为 false表示阻止事件的默认行为
+
+但是我有两个地方不懂。
+
+1、通过DOM0级方法添加的事件处理程序中同样可以传入一个event参数，它的type和window.event.type一样，但是传入的event参数却和window.event不一样，为什么？
+
+```js
+    btn.onclick= function (event) {
+        var event1=window.event;
+        console.log('event1.type='+event1.type);  //event1.type=click
+        console.log('event.type='+event.type);    //event.type=click
+        console.log('event1==event?'+(event==event1));  //event1==event?false
+    }
+```
+
+2、通过attachEvent添加的事件处理程序中传入的event和window.event是不一样的，为什么？
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+    var btn=document.getElementById("btn");
+    btn.attachEvent("onclick", function (type) {
+        console.log(event.type);    //click
+        console.log("event==window.event?"+(event==window.event)); //event==window.event?false
+    })
+</script>
+</body>
+```
+
+### 六、事件对象的公共成员
+
+#### 1、DOM中的event的公共成员
+
+event对象包含与创建它的特定事件有关的属性和方法。触发的事件类型不一样，可用的属性和方法不一样。但是，DOM中所有事件都有以下公共成员。【注意bubbles属性和cancelable属性】
+
+| 属性/方法                  | 类型         | 读/写 | 说明                                                         |
+| -------------------------- | ------------ | ----- | ------------------------------------------------------------ |
+| bubbles                    | Boolean      | 只读  | 表明事件是否冒泡                                             |
+| **stopPropagation()**      | Function     | 只读  | 取消事件的进一步捕获或冒泡。如果bubbles为true,则可以使用这个方法 |
+| stopImmediatePropagation() | Function     | 只读  | 取消事件的进一步捕获或冒泡**，同时阻止任何事件处理程序被调用**（DOM3级事件中新增） |
+| cancelable                 | Boolean      | 只读  | 表明是否可以取消事件的默认行为                               |
+| **preventDefault()**       | Function     | 只读  | 取消事件的默认行为。如果cancelable是true，则可以使用这个方法 |
+| defaultPrevented           | Boolean      | 只读  | 为true表示已经调用了preventDefault()(DOM3级事件中新增)       |
+| **currentTarget**          | Element      | 只读  | 其事件处理程序当前正在处理事件的那个元素（**currentTarget始终===this,即处理事件的元素**） |
+| **target**                 | Element      | 只读  | 直接事件目标，**真正触发事件的目标**                         |
+| detail                     | Integer      | 只读  | 与事件相关的细节信息                                         |
+| **eventPhase**             | Integer      | 只读  | 调用事件处理程序的阶段：1表示捕获阶段，2表示处于目标阶段，3表示冒泡阶段 |
+| trusted                    | Boolean      | 只读  | 为true表示事件是由浏览器生成的。为false表示事件是由开发人员通过JavaScript创建的（DOM3级事件中新增） |
+| **type**                   | String       | 只读  | 被触发的事件的类型                                           |
+| view                       | AbstractView | 只读  | 与事件关联的抽象视图。等同于发生事件的window对象             |
+
+##### 1、对比currentTarget和target
+
+在事件处理程序内部，**对象this始终等于currentTarget的值**，而target则只是包含事件的实际目标。
+
+举例：页面有个按钮，在body（按钮的父节点）中注册click事件，点按钮时click事件会冒泡到body进行处理。
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+    document.body.onclick=function(event){
+        console.log("body中注册的click事件");
+        console.log("this===event.currentTarget? "+(this===event.currentTarget)); //true
+        console.log("currentTarget===document.body?"+(event.currentTarget===document.body)); //true
+        console.log('event.target===document.getElementById("btn")? '+(event.target===document.getElementById("btn"))); //true
+    }
+</script>
+</body>
+```
+
+运行结果为：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/132236460227118.jpg)](http://www.cnblogs.com/starof/p/4096198.html)
+
+##### 2、通过type属性，可以在一个函数中处理多个事件。
+
+原理：通过检测event.type属性，对不同事件进行不同处理。
+
+举例：定义一个handler函数用来处理3种事件：click,mouseover,mouseout。
+
+```html
+<body>
+<input id="btn" type="button" value="click"/>
+<script>
+var handler=function(event){
+    switch (event.type){
+        case "click":
+            alert("clicked");
+            break;
+        case "mouseover":
+            event.target.style.backgroundColor="pink";
+            break;
+        case "mouseout":
+            event.target.style.backgroundColor="";
+    }
+};
+    var btn=document.getElementById("btn");
+    btn.onclick=handler;
+    btn.onmouseover=handler;
+    btn.onmouseout=handler;
+</script>
+</body>
+```
+
+运行效果：点击按钮，弹出框。鼠标经过按钮，按钮背景色变为粉色；鼠标离开按钮，背景色恢复默认。
+
+##### 3、stopPropagation()和stopImmediatePropagation()对比
+
+同：stopPropagation()和 stopImmediatePropagation()都可以用来取消事件的进一步捕获或冒泡。
+
+异：二者的区别在于当一个事件有多个事件处理程序时，stopImmediatePropagation()可以阻止之后事件处理程序被调用。
+
+举例：
+
+运行效果：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/142318286782479.jpg)](http://www.cnblogs.com/starof/p/4096198.html)
+
+##### 4、eventPhase
+
+eventPhase值在捕获阶段为1，处于目标阶段为2，冒泡阶段为3。
+
+| 常量                  | 值   |
+| --------------------- | ---- |
+| Event.CAPTURING_PHASE | 1    |
+| Event.AT_TARGET       | 2    |
+| Event.BUBBLING_PHASE  | 3    |
+
+可以通过下面代码查看：
+
+```js
+var btn=document.getElementById("btn");
+btn.onclick= function (event) {
+console.log(event.CAPTURING_PHASE); //1
+console.log(event.AT_TARGET); //2
+console.log(event.BUBBLING_PHASE); //3
+}
+```
+
+ 
+
+例子：
+
+运行效果：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/142343081006950.jpg)](http://www.cnblogs.com/starof/p/4096198.html)
+
+#### 2、IE中event的公共成员
+
+IE中的event的属性和方法和DOM一样会随着事件类型的不同而不同，但是也有一些是所有对象都有的公共成员，且这些成员大部分有对应的DOM属性或方法。
+
+| 属性/方法    | 类型    | 读/写 | 说明                                                         |
+| ------------ | ------- | ----- | ------------------------------------------------------------ |
+| cancelBubble | Boolean | 读/写 | 默认为false,但将其设置为true就可以取消事件冒泡（**与DOM中stopPropagation()方法的作用相同**） |
+| returnValue  | Boolean | 读/写 | 默认为true，但将其设置为false就可以取消事件的默认行为（**与DOM中的preventDefault()方法的作用相同**） |
+| srcElement   | Element | 只读  | 事件的目标（**与DOM中的target属性相同**）                    |
+| type         | String  | 只读  | 被触发的事件的类型                                           |
+
+### 七、鼠标事件
+
+DOM3级事件中定义了9个鼠标事件。
+
+- mousedown:鼠标按钮被按下（左键或者右键）时触发。不能通过键盘触发。
+- mouseup:鼠标按钮被释放弹起时触发。不能通过键盘触发。
+- click:单击鼠标**左键**或者按下回车键时触发。这点对确保易访问性很重要，意味着onclick事件处理程序既可以通过键盘也可以通过鼠标执行。
+- dblclick:双击鼠标**左键**时触发。
+- mouseover:鼠标移入目标元素上方。鼠标移到其后代元素上时会触发。
+- mouseout:鼠标移出目标元素上方。
+- mouseenter:鼠标移入元素范围内触发，**该事件不冒泡**，即鼠标移到其后代元素上时不会触发。
+- mouseleave:鼠标移出元素范围时触发，**该事件不冒泡**，即鼠标移到其后代元素时不会触发。
+- mousemove:鼠标在元素内部移到时不断触发。不能通过键盘触发。
+
+**note**:
+
+在一个元素上相继触发mousedown和mouseup事件，才会触发click事件。两次click事件相继触发才会触发dblclick事件。
+
+如果取消 了mousedown或mouseup中的一个，click事件就不会被触发。直接或间接取消了click事件，dblclick事件就不会被触发了。
+
+#### 1、事件触发的顺序
+
+举例：通过双击按钮，看一下上面触发的事件。
+
+在触摸屏幕上的元素时，事件（包括鼠标事件）发生的顺序如下 
+
+(1) touchstart
+
+(2) mouseover
+
+(3) mousemove（一次）
+
+(4) mousedown
+
+(5) mouseup
+
+(6) click
+
+(7) touchend
+
+click在移动端有300ms延迟。。。
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/182134449882507.jpg)](http://www.cnblogs.com/starof/p/4106904.html)
+
+#### 2、mouseenter和mouseover的区别
+
+ 区别：
+
+mouseover事件会冒泡，这意味着，鼠标移到其后代元素上时会触发。
+
+mouseenter事件不冒泡，这意味着，鼠标移到其后代元素上时不会触发。
+
+举例：
+
+[![img](https://images0.cnblogs.com/blog/315302/201411/192222025467766.png)](http://www.cnblogs.com/starof/p/4106904.html)[![img](https://images0.cnblogs.com/blog/315302/201411/192226088599084.png)](http://www.cnblogs.com/starof/p/4106904.html)
+
+**note**:
+
+mouseover对应mouseout,mouseenter对应mouseleave。效果可以取消上面代码的注释来看。
+
+ jquery中hover API是把mouseenter 和mouseleave组合在一起来用的。
+
+#### 3、鼠标左键和右键
+
+```html
+<script type="text/javascript">
+document.onmousedown=function (ev)
+{
+    var oEvent=ev||event; //IE浏览器直接使用event或者window.event得到事件本身。
+    alert(oEvent.button);// IE下鼠标的 左键是1 ，  右键是2   ff和chrome下 鼠标左键是0  右键是2
+};
+</script>
+```
+
+#### 4、mouseover和mousemove的区别
+
+一般情况下mouseover即可，特殊情况才用mousemove，mousemove更耗资源，比如要监控鼠标坐标的变化等。
+
+### Event 对象
+
+Event 对象代表事件的状态，比如事件在其中发生的元素、键盘按键的状态、鼠标的位置、鼠标按钮的状态。
+
+事件通常与函数结合使用，函数不会在事件发生前被执行！
+
+事件句柄　(Event Handlers)
+
+HTML 4.0 的新特性之一是能够使 HTML 事件触发浏览器中的行为，比如当用户点击某个 HTML 元素时启动一段 JavaScript。下面是一个属性列表，可将之插入 HTML 标签以定义事件的行为。
+
+| 属性                                                         | 此事件发生在何时...                  |
+| :----------------------------------------------------------- | :----------------------------------- |
+| [onabort](http://www.w3school.com.cn/jsref/event_onabort.asp) | 图像的加载被中断。                   |
+| [onblur](http://www.w3school.com.cn/jsref/event_onblur.asp)  | 元素失去焦点。                       |
+| [onchange](http://www.w3school.com.cn/jsref/event_onchange.asp) | 域的内容被改变。                     |
+| [onclick](http://www.w3school.com.cn/jsref/event_onclick.asp) | 当用户点击某个对象时调用的事件句柄。 |
+| [ondblclick](http://www.w3school.com.cn/jsref/event_ondblclick.asp) | 当用户双击某个对象时调用的事件句柄。 |
+| [onerror](http://www.w3school.com.cn/jsref/event_onerror.asp) | 在加载文档或图像时发生错误。         |
+| [onfocus](http://www.w3school.com.cn/jsref/event_onfocus.asp) | 元素获得焦点。                       |
+| [onkeydown](http://www.w3school.com.cn/jsref/event_onkeydown.asp) | 某个键盘按键被按下。                 |
+| [onkeypress](http://www.w3school.com.cn/jsref/event_onkeypress.asp) | 某个键盘按键被按下并松开。           |
+| [onkeyup](http://www.w3school.com.cn/jsref/event_onkeyup.asp) | 某个键盘按键被松开。                 |
+| [onload](http://www.w3school.com.cn/jsref/event_onload.asp)  | 一张页面或一幅图像完成加载。         |
+| [onmousedown](http://www.w3school.com.cn/jsref/event_onmousedown.asp) | 鼠标按钮被按下。                     |
+| [onmousemove](http://www.w3school.com.cn/jsref/event_onmousemove.asp) | 鼠标被移动。                         |
+| [onmouseout](http://www.w3school.com.cn/jsref/event_onmouseout.asp) | 鼠标从某元素移开。                   |
+| [onmouseover](http://www.w3school.com.cn/jsref/event_onmouseover.asp) | 鼠标移到某元素之上。                 |
+| [onmouseup](http://www.w3school.com.cn/jsref/event_onmouseup.asp) | 鼠标按键被松开。                     |
+| [onreset](http://www.w3school.com.cn/jsref/event_onreset.asp) | 重置按钮被点击。                     |
+| [onresize](http://www.w3school.com.cn/jsref/event_onresize.asp) | 窗口或框架被重新调整大小。           |
+| [onselect](http://www.w3school.com.cn/jsref/event_onselect.asp) | 文本被选中。                         |
+| [onsubmit](http://www.w3school.com.cn/jsref/event_onsubmit.asp) | 确认按钮被点击。                     |
+| [onunload](http://www.w3school.com.cn/jsref/event_onunload.asp) | 用户退出页面。                       |
+
+#### 鼠标 / 键盘属性
+
+| 属性                                                         | 描述                                         |
+| :----------------------------------------------------------- | :------------------------------------------- |
+| [altKey](http://www.w3school.com.cn/jsref/event_altkey.asp)  | 返回当事件被触发时，"ALT" 是否被按下。       |
+| [button](http://www.w3school.com.cn/jsref/event_button.asp)  | 返回当事件被触发时，哪个鼠标按钮被点击。     |
+| [clientX](http://www.w3school.com.cn/jsref/event_clientx.asp) | 返回当事件被触发时，鼠标指针的水平坐标。     |
+| [clientY](http://www.w3school.com.cn/jsref/event_clienty.asp) | 返回当事件被触发时，鼠标指针的垂直坐标。     |
+| [ctrlKey](http://www.w3school.com.cn/jsref/event_ctrlkey.asp) | 返回当事件被触发时，"CTRL" 键是否被按下。    |
+| [metaKey](http://www.w3school.com.cn/jsref/event_metakey.asp) | 返回当事件被触发时，"meta" 键是否被按下。    |
+| [relatedTarget](http://www.w3school.com.cn/jsref/event_relatedtarget.asp) | 返回与事件的目标节点相关的节点。             |
+| [screenX](http://www.w3school.com.cn/jsref/event_screenx.asp) | 返回当某个事件被触发时，鼠标指针的水平坐标。 |
+| [screenY](http://www.w3school.com.cn/jsref/event_screeny.asp) | 返回当某个事件被触发时，鼠标指针的垂直坐标。 |
+| [shiftKey](http://www.w3school.com.cn/jsref/event_shiftkey.asp) | 返回当事件被触发时，"SHIFT" 键是否被按下。   |
+
+#### IE 属性
+
+除了上面的鼠标/事件属性，IE 浏览器还支持下面的属性：
+
+| 属性            | 描述                                                         |
+| :-------------- | :----------------------------------------------------------- |
+| cancelBubble    | 如果事件句柄想阻止事件传播到包容对象，必须把该属性设为 true。 |
+| fromElement     | 对于 mouseover 和 mouseout 事件，fromElement 引用移出鼠标的元素。 |
+| keyCode         | 对于 keypress 事件，该属性声明了被敲击的键生成的 Unicode 字符码。对于 keydown 和 keyup 事件，它指定了被敲击的键的虚拟键盘码。虚拟键盘码可能和使用的键盘的布局相关。 |
+| offsetX,offsetY | 发生事件的地点在事件源元素的坐标系统中的 x 坐标和 y 坐标。   |
+| returnValue     | 如果设置了该属性，它的值比事件句柄的返回值优先级高。把这个属性设置为 fasle，可以取消发生事件的源元素的默认动作。 |
+| srcElement      | 对于生成事件的 Window 对象、Document 对象或 Element 对象的引用。 |
+| toElement       | 对于 mouseover 和 mouseout 事件，该属性引用移入鼠标的元素。  |
+| x,y             | 事件发生的位置的 x 坐标和 y 坐标，它们相对于用CSS动态定位的最内层包容元素。 |
+
+### 标准 Event 属性
+
+下面列出了 2 级 DOM 事件标准定义的属性。
+
+| 属性                                                         | 描述                                           |
+| :----------------------------------------------------------- | :--------------------------------------------- |
+| [bubbles](http://www.w3school.com.cn/jsref/event_bubbles.asp) | 返回布尔值，指示事件是否是起泡事件类型。       |
+| [cancelable](http://www.w3school.com.cn/jsref/event_cancelable.asp) | 返回布尔值，指示事件是否可拥可取消的默认动作。 |
+| [currentTarget](http://www.w3school.com.cn/jsref/event_currenttarget.asp) | 返回其事件监听器触发该事件的元素。             |
+| [eventPhase](http://www.w3school.com.cn/jsref/event_eventphase.asp) | 返回事件传播的当前阶段。                       |
+| [target](http://www.w3school.com.cn/jsref/event_target.asp)  | 返回触发此事件的元素（事件的目标节点）。       |
+| [timeStamp](http://www.w3school.com.cn/jsref/event_timestamp.asp) | 返回事件生成的日期和时间。                     |
+| [type](http://www.w3school.com.cn/jsref/event_type.asp)      | 返回当前 Event 对象表示的事件的名称。          |
+
+#### 标准 Event 方法
+
+下面列出了 2 级 DOM 事件标准定义的方法。IE 的事件模型不支持这些方法：
+
+| 方法                                                         | 描述                                     |
+| :----------------------------------------------------------- | :--------------------------------------- |
+| [initEvent()](http://www.w3school.com.cn/jsref/event_initevent.asp) | 初始化新创建的 Event 对象的属性。        |
+| [preventDefault()](http://www.w3school.com.cn/jsref/event_preventdefault.asp) | 通知浏览器不要执行与事件关联的默认动作。 |
+| [stopPropagation()](http://www.w3school.com.cn/jsref/event_stoppropagation.asp) | 不再派发事件。                           |
+
+
+
+
 
 ### HTTP 响应状态码（重点分析）
 
@@ -604,3 +1677,219 @@ HTTP 状态码种类繁多，数量达几十种。其中最常用的有以下 14
 ##### 3.14 503 Service Unavailable
 
 表明服务器暂时处于超负载或正在进行停机维护，现在无法处理请求。如果事先得知解除以上状况需要的时间，最好写入 Retry-After 首部字段再返回给客户端。
+
+浏览器的缓存机制提供了可以将用户数据存储在客户端上的方式，可以利用cookie,session等跟服务端进行数据交互。
+
+## cookie和session
+
+cookie和session都是用来跟踪浏览器用户身份的会话方式。
+
+**区别**：
+
+### 1、保持状态：
+
+cookie保存在浏览器端，session保存在服务器端
+
+### 2、使用方式：
+
+（1）**cookie机制**：如果不在浏览器中设置过期时间，cookie被保存在内存中，生命周期随浏览器的关闭而结束，这种cookie简称会话cookie。如果在浏览器中设置了cookie的过期时间，cookie被保存在硬盘中，关闭浏览器后，cookie数据仍然存在，直到过期时间结束才消失。
+
+​     Cookie是服务器发给客户端的特殊信息，cookie是以文本的方式保存在客户端，每次请求时都带上它
+
+（2）**session机制**：当服务器收到请求需要创建session对象时，首先会检查客户端请求中是否包含sessionid。如果有sessionid，服务器将根据该id返回对应session对象。如果客户端请求中没有sessionid，服务器会创建新的session对象，并把sessionid在本次响应中返回给客户端。通常使用cookie方式存储sessionid到客户端，在交互中浏览器按照规则将sessionid发送给服务器。如果用户禁用cookie，则要使用URL重写，可以通过response.encodeURL(url) 进行实现；API对encodeURL的结束为，当浏览器支持Cookie时，url不做任何处理；当浏览器不支持Cookie的时候，将会重写URL将SessionID拼接到访问地址后。
+
+3、存储内容：
+
+cookie只能保存字符串类型，以文本的方式；session通过类似与Hashtable的数据结构来保存，能支持任何类型的对象(session中可含有多个对象)
+
+4、存储的大小：
+
+cookie：单个cookie保存的数据不能超过4kb；session大小没有限制。
+
+5、安全性：
+
+cookie：
+
+针对cookie所存在的攻击：Cookie欺骗，Cookie截获；session的安全性大于cookie。
+
+原因如下：
+
+（1）sessionID存储在cookie中，若要攻破session首先要攻破cookie；
+
+（2）sessionID是要有人登录，或者启动session_start才会有，所以攻破cookie也不一定能得到sessionID；
+
+（3）第二次启动session_start后，前一次的sessionID就是失效了，session过期后，sessionID也随之失效。
+
+   (4）sessionID是加密的
+
+（5）综上所述，攻击者必须在短时间内攻破加密的sessionID，这很难。
+
+### 6、应用场景：
+
+cookie：
+
+（1）判断用户是否登陆过网站，以便下次登录时能够实现自动登录（或者记住密码）。如果我们删除cookie，则每次登录必须从新填写登录的相关信息。
+
+（2）保存上次登录的时间等信息。
+
+（3）保存上次查看的页面
+
+（4）浏览计数
+
+![img](https://images2017.cnblogs.com/blog/1209205/201709/1209205-20170928000104559-1868896430.png)
+
+session：Session用于保存每个用户的专用信息，变量的值保存在服务器端，通过SessionID来区分不同的客户。
+
+　　（1）网上商城中的购物车
+
+　　（2）保存用户登录信息
+
+　　（3）将某些数据放入session中，供同一用户的不同页面使用
+
+　　（4）防止用户非法登录
+
+###  7、缺点：
+
+**cookie：**（1）大小受限
+
+　　　　（2）用户可以操作（禁用）cookie，使功能受限
+
+　　　　（3）安全性较低
+
+　　　    （4）有些状态不可能保存在客户端。
+
+　　　　　5）每次访问都要传送cookie给服务器，浪费带宽。
+
+　　　　　6）cookie数据有路径（path）的概念，可以限制cookie只属于某个路径下。
+
+ **session：**（1）Session保存的东西越多，就越占用服务器内存，对于用户在线人数较多的网站，服务器的内存压力会比较大。
+
+　　　　　  (2）依赖于cookie（sessionID保存在cookie），如果禁用cookie，则要使用URL重写，不安全
+
+　　　　　（3）创建Session变量有很大的随意性，可随时调用，不需要开发者做精确地处理，所以，过度使用session变量将会导致代码不可读而且不好维护。
+
+### 8、WebStorage
+
+WebStorage的目的是克服由cookie所带来的一些限制，当数据需要被严格控制在客户端时，不需要持续的将数据发回服务器。
+
+WebStorage两个主要目标：
+
+（1）提供一种在cookie之外存储会话数据的路径。
+
+（2）提供一种存储大量可以跨会话存在的数据的机制。
+
+HTML5的WebStorage提供了两种API：localStorage（本地存储）和sessionStorage（会话存储）。
+
+1、生命周期：localStorage:localStorage的生命周期是永久的，关闭页面或浏览器之后localStorage中的数据也不会消失。localStorage除非主动删除数据，否则数据永远不会消失。sessionStorage的生命周期是在仅在当前会话下有效。sessionStorage引入了一个“浏览器窗口”的概念，sessionStorage是在同源的窗口中始终存在的数据。只要这个浏览器窗口没有关闭，即使刷新页面或者进入同源另一个页面，数据依然存在。但是sessionStorage在关闭了浏览器窗口后就会被销毁。同时独立的打开同一个窗口同一个页面，sessionStorage也是不一样的。
+
+2、存储大小：localStorage和sessionStorage的存储数据大小一般都是：5MB
+
+3、存储位置：localStorage和sessionStorage都保存在客户端，不与服务器进行交互通信。
+
+4、存储内容类型：localStorage和sessionStorage只能存储字符串类型，对于复杂的对象可以使用ECMAScript提供的JSON对象的stringify和parse来处理
+
+5、获取方式：localStorage：window.localStorage;；sessionStorage：window.sessionStorage;。
+
+6、应用场景：localStoragese：常用于长期登录（+判断用户是否已登录），适合长期保存在本地的数据。sessionStorage：敏感账号一次性登录；
+
+**WebStorage的优点：**
+
+（1）存储空间更大：cookie为4KB，而WebStorage是5MB；
+
+（2）节省网络流量：WebStorage不会传送到服务器，存储在本地的数据可以直接获取，也不会像cookie一样美词请求都会传送到服务器，所以减少了客户端和服务器端的交互，节省了网络流量；
+
+（3）对于那种只需要在用户浏览一组页面期间保存而关闭浏览器后就可以丢弃的数据，sessionStorage会非常方便；
+
+（4）快速显示：有的数据存储在WebStorage上，再加上浏览器本身的缓存。获取数据时可以从本地获取会比从服务器端获取快得多，所以速度更快；
+
+（5）安全性：WebStorage不会随着HTTP header发送到服务器端，所以安全性相对于cookie来说比较高一些，不会担心截获，但是仍然存在伪造问题；
+
+（6）WebStorage提供了一些方法，数据操作比cookie方便；
+
+　　　　setItem (key, value) ——  保存数据，以键值对的方式储存信息。
+
+​      　　 getItem (key) ——  获取数据，将键值传入，即可获取到对应的value值。
+
+​        　　removeItem (key) ——  删除单个数据，根据键值移除对应的信息。
+
+​        　　clear () ——  删除所有的数据
+
+​        　　key (index) —— 获取某个索引的key
+
+### 三者的异同
+
+|      特性      |                            Cookie                            |                        localStorage                         |                       sessionStorage                        |
+| :------------: | :----------------------------------------------------------: | :---------------------------------------------------------: | :---------------------------------------------------------: |
+|  数据的生命期  | 一般由服务器生成，可设置失效时间。如果在浏览器端生成Cookie，默认是关闭浏览器后失效 |                  除非被清除，否则永久保存                   |        仅在当前会话下有效，关闭页面或浏览器后被清除         |
+|  存放数据大小  |                            4K左右                            |                          一般为5MB                          |                          一般为5MB                          |
+| 与服务器端通信 | 每次都会携带在HTTP头中，如果使用cookie保存过多数据会带来性能问题 |     仅在客户端（即浏览器）中保存，不参与和服务器的通信      |     仅在客户端（即浏览器）中保存，不参与和服务器的通信      |
+|     易用性     |          需要程序员自己封装，源生的Cookie接口不友好          | 源生接口可以接受，亦可再次封装来对Object和Array有更好的支持 | 源生接口可以接受，亦可再次封装来对Object和Array有更好的支持 |
+
+#### 应用场景
+
+有了对上面这些差别的直观理解，我们就可以讨论三者的应用场景了。
+
+因为考虑到每个 HTTP 请求都会带着 Cookie 的信息，所以 Cookie 当然是能精简就精简啦，比较常用的一个应用场景就是判断用户是否登录。针对登录过的用户，服务器端会在他登录时往 Cookie 中插入一段加密过的唯一辨识单一用户的辨识码，下次只要读取这个值就可以判断当前用户是否登录啦。
+
+而另一方面 localStorage 接替了 Cookie 管理购物车的工作，同时也能胜任其他一些工作。比如HTML5游戏通常会产生一些本地数据，localStorage 也是非常适用的。如果遇到一些内容特别多的表单，为了优化用户体验，我们可能要把表单页面拆分成多个子页面，然后按步骤引导用户填写。这时候 sessionStorage 的作用就发挥出来了。
+
+#### 安全性的考虑
+
+需要注意的是，不是什么数据都适合放在 Cookie、localStorage 和 sessionStorage 中的。使用它们的时候，需要时刻注意是否有代码存在 XSS 注入的风险。因为只要打开控制台，你就随意修改它们的值，也就是说如果你的网站中有 XSS 的风险，它们就能对你的 localStorage 肆意妄为。所以千万不要用它们存储你系统中的敏感数据。
+
+#### localStorage和sessionStorage操作
+
+localStorage和sessionStorage都具有相同的操作方法，例如setItem、getItem和removeItem等
+
+setItem存储value
+
+用途：将value存储到key字段
+
+```js
+sessionStorage.setItem("key", "value");     localStorage.setItem("site", "js8.in");
+```
+
+getItem获取value
+
+用途：获取指定key本地存储的值
+
+```js
+var value = sessionStorage.getItem("key");     var site = localStorage.getItem("site");
+```
+
+removeItem删除key
+
+用途：删除指定key本地存储的值
+
+```js
+sessionStorage.removeItem("key");     localStorage.removeItem("site");
+```
+
+clear清除所有的key/value
+
+用途：清除所有的key/value
+
+```js
+sessionStorage.clear();     localStorage.clear();
+```
+
+其他操作方法：点操作和[ ]
+
+web Storage不但可以用自身的setItem,getItem等方便存取，也可以像普通对象一样用点(.)操作符，及[]的方式进行数据存储，像如下的代码：
+
+```js
+var storage = window.localStorage; storage.key1 = "hello"; storage["key2"] = "world"; console.log(storage.key1); console.log(storage["key2"]);
+```
+
+localStorage和sessionStorage的key和length属性实现遍历
+
+sessionStorage和localStorage提供的key()和length可以方便的实现存储的数据遍历，例如下面的代码：
+
+```js
+var storage = window.localStorage;
+for(var i=0, len=storage.length; i<len;i++){
+    var key = storage.key(i);     
+    var value = storage.getItem(key);     
+    console.log(key + "=" + value); 
+}
+```
