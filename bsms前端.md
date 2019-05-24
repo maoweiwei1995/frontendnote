@@ -1,3 +1,690 @@
+wepack问题
+
+npm问题
+
+git常见操作
+
+node问题
+
+常见js设计模式
+
+**实现常见css 轮播图**
+
+## 前端常见的攻击方式及预防方法
+
+#### 1.XSS (Cross Site Script) ，跨站脚本攻击
+
+有句话说
+
+> 所有的输入都是有害的。
+
+跨站脚本是最常见的计算机安全漏洞，**跨站脚本攻击**指的是恶意攻击者往Web页面里插入恶意html代码，当用户浏览该页之时，嵌入的恶意html代码会被执行，对受害用户可能采取Cookie资料窃取、会话劫持、钓鱼欺骗等各种攻击。
+xss给人留下的印象：
+
+> "xss? 不就是弹出个对话框给自己看吗？"
+> “跨站脚本是在客户端执行，xss漏洞关我什么事！”
+> “反正xss不能窃取我的root权限。”
+
+其实，随着web2.0信息分享模式和社交网络的发展，xss衍生出的攻击危害还是很大的。最早的MySpace的xss蠕虫攻击，传染了100多万用户，网站瘫痪，后来的知名网址如微博就爆发了xss蠕虫攻击，持续了16分钟。
+
+**危害**：
+
+- 网络钓鱼，包括窃取用户账号；
+- 窃取用户cookies资料，从而获得用户隐私信息，或利用用户身份进一步对网站执行操作；
+- 劫持用户会话，进行非法转账、强制发表日志、发送电子邮件等；
+- 强制弹出广告、刷流量等；
+- 恶意操作，删除文章等；
+- 网页挂马；
+- 传播跨站脚本蠕虫等
+  .....
+
+**举个简单栗子** ：
+
+假如你现在是站点上一个用户，发布信息的功能存在漏洞可以执行js。你在此刻输入一个恶意脚本，那么当前所有看到你新信息的人的浏览器都会执行这个脚本弹出提示框 （很爽吧 弹出广告 ：）），如果你做一些更为激进行为呢？后果难以想象。
+
+##### 反射型XSS
+
+早期，通过url的输入，将恶意脚本附加到URL地址的参数中。能够弹出一个警告框，说明跨站脚本攻击漏洞存在。特点：单击时触发，执行一次。
+通常出现在网站的搜索栏、用户登入口等地方。
+`http://weibo.com/login.php?'u=1931138954'<script>alert(/ssss/)</script>`
+
+
+
+![img](https://upload-images.jianshu.io/upload_images/1180061-f26e723f39ae4afc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/660/format/webp)
+
+
+
+- ##### XSS 跨框架钓鱼
+
+怎么构造钓鱼？使用标签iframe.
+`http://weibo.com/login.php?'u=1931138954'<iframe src='http://www.baidu.com'/>`
+
+
+
+![img](https://upload-images.jianshu.io/upload_images/1180061-817532f9b2b1c615.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/662/format/webp)
+
+
+
+假如这是一个银行网银登录的网站，存在这样的漏洞，那我们作为攻击者，我可以构造一个类似的页面，把它原有的登录框覆盖掉。我可以把这个链接发给被攻击者，以邮件或者其他的方式，这里需要用到的技术是社会工程学，诱使被攻击者访问这个链接，最终欺骗他来登录，而攻击者就可以轻易的拿到被攻击者的账号和密码信息。也有人问，发过去的这个链接带有这样的标志或参数，被攻击者一眼就能看出来。在这里，我们可以对这段代码进行编码，不管是url的编码还是其他方式的编码，也就是说，被攻击者一眼看不出来这个异常，所以就会被诱使去访问这个链接，最终造成影响。这个是钓鱼攻击。
+
+现在大部分主流浏览器已经对url攻击做了预防方法。
+比如在老问吧输入： `https://bar.focus.cn/s?keywords=<script>alert(1)</script>`
+
+chrome： **直接报错**
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_df53d92be12a485bb838cb34d0871069)
+
+ie：**下面会有弹窗提示阻止跨站点脚本攻击**
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_f99ecda9a22a4cc5ae6fefe0f3582e04)
+
+搜狗：**页面结果过滤插入的代码**，控制台输出提示做了xss防御
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_291b9ded477647f78e785bffc2423fa3)
+
+危险：
+网站的用户就有被冒名顶替的风险。也就是我们的cookie信息被获取，我们就存在有被冒名顶替的风险。
+我们刚才获取cookie的信息不是让它alter告警方式展示给用户，而是通过脚本程序将我们函数获取的cookie信息，发送至远程的恶意网站，远程的这个恶意网站是专门用来接收当前的cookie信息的，当被攻击者触发这个漏洞以后，它当前用户的cookie信息就会被发送到远端的恶意网站。攻击者登录恶意网站，查看到cookie信息后可以对这个用户的控制权限进行冒名顶替。
+
+- HTML注入式钓鱼
+  直接利用XSS漏洞注射HTML/JavaScript代码到页面中，或者是把用户输入的数据”存储“在服务器端。比如登录密码直接设置为<script>alert(1)</script>，存入数据库中。
+
+**常见解决办法**:
+
+设计xss Filter，分析用户提交的输入，并消除潜在的跨站脚本攻击、恶意的HTML等。在需要html输入的地方对html标签及一些特殊字符( ” < > & 等等 )做过滤，将其转化为不被浏览器解释执行的字符。
+
+**再举个栗子**：
+
+用ie在问吧的搜索输入`<script>alert('包小姐')</script>`
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_870109472cad45a9b3b4a1f5f4e087e9)
+
+输入
+
+```
+<script>alert(document.cookie)</script>
+```
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_818b8516f9f34aa0bc692f5f0c233c10)
+
+在微博同样在搜索输入
+
+```
+<script>alert('包小姐')</script>
+```
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_72aa9ba2094d492ba0a3c9e637ab0ba1)
+
+在知乎搜索输入
+
+```
+<script>alert('hello')</script>
+```
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_50189f17c8f64f3daa0a1ade88be9648)
+
+
+
+在知乎修改密码为：`<script>alert('包小姐')</script>`
+结果：没反应，控制台报错HTTP405: 错误方法 - 不支持使用的 HTTP 谓词。
+
+#### 持久型xss
+
+> 攻击者事先将恶意js代码上传或存储到漏洞服务器中，只要受害者浏览包含此恶意js代码的页面就会执行恶意代码。
+
+通常出现在网站的留言、评论、博客日志等。
+危害：不需要单击URL触发，危害比反射型xss大，更严重的是能编写**xss蠕虫**（利用ajax/js 编写的蠕虫病毒，能够在网站中实现病毒的几何数级传播，其感染速度和攻击效果都很可怕）。
+(1)寻找xss点
+发掘个人档案、日志、留言等地方的xss漏洞
+(2)实现蠕虫行为
+将xss shellcode写进xss点（例如个人档案），引诱用户查看，攻击者利用ajax修改受害用户的个人档案信息，将恶意的代码复制进去。随后任何查看受害者个人档案的也会被感染，执行重复操作，直到xss蠕虫传播。
+
+绕过**xss** Filter：
+
+1、利用<>标记注射HTML/js
+
+解决：过滤和转义`<>`或`<script>`等字符，从而过滤某些形式的xss`<script>shellcode</script>`
+
+2、利用HTML标签属性值执行xss
+
+<table background="javascript:alert(/xss/)"></table>
+![](javascript:alert('xss');)
+解决：过滤JavaScript等关键字。
+
+3、空格回车Tab
+
+利用空车、回车和Tab键绕过限制，`![](javas cript:alert(/xss/))`
+
+4、对标签属性值转码
+
+HTML属性值支持ASCII形式，`![](javascrip&#116&#58alert(/xss/);)`
+解决：最好也过滤&#\等字符。
+
+5、产生自己的事件
+
+`![](#)`，只要图片不存在就会触发onerror事件
+
+6、利用css跨站剖析
+
+使用css样式表执行javascript具有隐蔽、灵活多变的特点
+
+```
+<div style="background-image:url(javascript:alert('xss')">
+<style>
+  <body {background-image:url("javascript:alert('xss')");}
+</style>
+```
+
+使用link或import引用css`<link rel="stylesheet" href="http://www.evil.com/attack.css">`
+`p {background-image: expression(alert("xss"));}`
+`<style type='text/css'>@import url(http://www.evil.com/xss.css);</style>`
+解决：禁用style标签，过滤标签时过滤style属性，过滤含expression、import等敏感字符的样式表
+
+7、扰乱过滤规则
+
+大小写混淆，不使用引号`<iMg sRC="jaVasCript:alert(0);">`
+全角字符`<div style="{left: ｅｘｐｒｅｓｓｉｏｎ（ａｌｅｒｔ(0)）}">`
+/**/会被浏览器忽略 `<div style="wid/****/th: expre/*XSS*/ssion(alert('xss'));">`
+\和\0 被浏览器忽略`@\0im\port'\0ja\vasc\ript:alert("xss")`;
+e转换成\65 `<p style="xss:\65xpression(alert(/xss/))">`
+
+**字符编码**：
+
+可以让xss代码绕过服务端的过滤，还能更好地隐藏Shellcode
+`![](javascript:alert('XSS');)`
+进行十进制转码后得到
+`![](&#106&#97&#118&#97&#115&#99&#114&#105&#112&#116&#58&#97&#108&#101&#114&#116&#40&#39&#88&#83&#83&#39&#41&#59)`
+用eval()执行10进制脚本
+`![](javascript:eval(String.fromCharCode(97,108,101,114,116,40,39,88,83,83,39,41)))`
+style属性中经过十六进制编码逃避过滤
+
+```
+<div style="xss:expression(alert(1));"></div>
+<img STYLE="background-image:\75\72\6c\28\6a\61\76\61\73\63\72\69\70\74\3a\61\6c\65\72\74\28\27\58\53\53\27\29\29">
+```
+
+等等其他编码方式
+还有js支持unicode、escapes、十六进制、八进制等编码形式，如果运用于跨站攻击，能大大加强xss的威力。
+
+**拆分跨站法**
+
+当程序没有过滤xss关键字符，却对输入字符长度有限制时。
+比如：使用拆分法连续发表4篇文章
+
+> 标题1：<script>z='<script src=';/*
+> 标题2：/*z+='http://www.test.c';/*
+> 标题3：*/z+='n/1.js></script>';/*
+> 标题4：/*document.write(z)</script>
+
+/* * / 在脚本标签中是注释，/*和*/之间的字符被忽略，最终转成：
+
+> <script>z='<script src=';
+> z+='http://www.test.c';
+> z+='n/1.js></script>';
+> document.write(z)</script>
+
+脚本顺利执行。
+等等还有很多攻击方式与调用shellcode的方法，这里就不一一讲述了。。。。
+
+##### 防御
+
+确认客户端生成数据的唯一安全方法就是在服务器端实施保护措施。
+（1）输出编码
+
+- < 转成 & lt ;
+  *> 转成 & gt;
+- & 转成 & amp;
+  ...
+
+（2）白名单、黑名单
+（3）URL属性
+
+- 规定href和src是以http://开头；
+- 规定不能有十进制和十六进制的编码字符
+- 规定属性以双引号“界定
+
+**前端防御组件**：[js-xss](https://link.jianshu.com/?t=https://github.com/leizongmin/js-xss/blob/master/README.zh.md)
+
+js-xss是一个用于对用户输入的内容进行过滤，以避免遭受XSS攻击的模块，一般是基于**黑白名单**的安全过滤策略。
+
+- 特性
+  （1）白名单控制允许的HTML标签及各标签的属性
+  （2）通过自定义处理函数，可对任意标签及其属性进行处理
+- 安装
+
+**NPM**
+
+```
+$ npm install xss
+```
+
+- 使用方法
+
+在**node**.js中使用
+
+```
+const xss = require('xss');
+$('.btnSure').on('click', function(){
+  let result = xss($('.input').val());
+  putout.html(result);
+});
+```
+
+结果：能够显示出输入的代码，而不是出现alert弹窗。
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_f97fed44c97542eabc9cf15f75c275f4)
+
+**自定义过滤规则**
+
+通过 `whiteList` 来指定，格式为：`{'标签名': ['属性1', '属性2']}` 。不在白名单上 的标签将被过滤，不在白名单上的属性也会被过滤。以下是示例：
+
+```
+// 只允许a标签，该标签只允许 title这个属性
+let options = {
+  whiteList:{
+    a: ['title']
+  }
+};
+// 使用以上配置后，下面的HTML
+// <a href="https://bar.focus.cn" title="问吧">问吧问吧</a>
+// 将被过滤为
+// <a title="问吧">问吧问吧</a>
+```
+
+![img](http://avatarimg.bjcnc.img.sohucs.com/bp_0e8e67f5c84e4ef5b4079acf0689c4bb)
+
+自定义CSS**过滤器**
+
+如果配置中允许了标签的 `style`属性，则它的值会通过`cssfilter` 模块处理。`cssfilter`模块包含了一个默认的CSS白名单，你可以通过以下的方式配置：
+
+```
+myxss = new xss.FilterXSS({
+  css: {
+    whiteList: {
+      position: /^fixed|relative$/,
+      top: true,
+      left: true,
+    }
+  }
+});
+html = myxss.process('<script>alert("xss");</script>');
+```
+
+**去掉不在白名单上的标签**
+
+通过`stripIgnoreTag`来设置：
+
+```
+let options = {
+  whiteList:{
+    'a': ['title']
+  },
+  stripIgnoreTag: true
+};
+```
+
+结果：
+`code:<script>alert('问吧');</script>`过滤为`code:alert('问吧');`
+
+**去掉不在白名单上的标签及标签体**
+
+通过`stripIgnoreTagBody`来设置：
+
+```
+let options = {
+  whiteList:{
+    'a': ['title']
+ },
+  stripIgnoreTag: ['script']
+};
+```
+
+结果：
+`code:<script>alert('问吧');</script>`过滤为`code:`
+
+参考资料：
+《XSS跨站脚本攻击剖析与防御》 邱永华
+
+### 2.CSRF(Cross Site Request Forgery)，跨站点伪造请求。
+
+攻击者通过各种方法伪造一个请求，模仿用户提交表单的行为，从而达到修改用户的数据，或者执行特定任务的目的。
+简单例子：
+
+- 在某个论坛管理页面，管理员可以在list.php页面执行删除帖子操作，根据URL判断删除帖子的id，像这样的一个URL
+
+```
+http://localhost/list.php?action=delete&id=12
+```
+
+当恶意用户想管理员发送包含CSFR的邮件，骗取管理员访问[http://test.com/csrf.php](https://link.jianshu.com/?t=http://test.com/csrf.php),在这个恶意网页中只要包含这样的html语句就可以利用让管理员在不知情的情况下删除帖子了
+
+```
+<img alt="" arc="http://localhost/list.php?action=delete&id=12"/>
+```
+
+这个利用了img的src可以跨域请求的特点，这种情况比较少，因为一般网站不会利用get请求修改资源信息。
+但是恶意网站这么写一样可以攻击：
+
+```
+<!DOCTYPE html>
+<html>
+　　<body>
+　　　　<iframe display="none">
+　　　　　　<form method="post" action="http://localhost/list.php">
+　　　　　　　　<input type="hidden" name="action" value="delete">
+　　　　　　　　<input type="hidden" name="id" value="12">
+                <input id="csfr" type="submit"/>
+　　　　　　</form>
+　　　　</iframe>
+
+        <script type="text/javascript">
+      　　　　 document.getElementById('csfr').submit();
+　　　　</script>
+　　</body>
+</html>
+```
+
+**解决的思路有**:
+
+1.采用POST请求,增加攻击的难度.用户点击一个链接就可以发起GET类型的请求。而POST请求相对比较难，攻击者往往需要借助javascript才能实现。
+2.对请求进行认证，确保该请求确实是用户本人填写表单并提交的，而不是第三者伪造的.具体可以在会话中增加token,确保看到信息和提交信息的是同一个人。（验证码）
+
+### 3.Http Heads攻击
+
+HTTP协议在Response header和content之间，有一个空行，即两组CRLF（0x0D 0A）字符。这个空行标志着headers的结束和content的开始。“聪明”的攻击者可以利用这一点。只要攻击者有办法将任意字符“注入”到headers中，这种攻击就可以发生。
+
+- 以登陆为例:有这样一个url:
+  `http://localhost/login?page=http%3A%2F%2Flocalhost%2Findex`
+  当登录成功以后，需要重定向回page参数所指定的页面。下面是重定向发生时的response headers.
+  `HTTP/1.1 302 Moved Temporarily Date: Tue, 17 Aug 2010 20:00:29 GMT Server: Apache mod_fcgid/2.3.5 mod_auth_passthrough/2.1 mod_bwlimited/1.4 FrontPage/5.0.2.2635 Location: http://localhost/index`
+
+假如把URL修改一下，变成这个样子：
+[http://localhost/login?page=http%3A%2F%2Flocalhost%2Fcheckout%0D%0A%0D%0A%3Cscript%3Ealert%28%27hello%27%29%3C%2Fscript%3E](https://link.jianshu.com/?t=http://localhost/login?page=http%3A%2F%2Flocalhost%2Fcheckout%0D%0A%0D%0A%3Cscript%3Ealert%28%27hello%27%29%3C%2Fscript%3E)
+
+那么重定向发生时的reponse会变成下面的样子：
+HTTP/1.1 302 Moved Temporarily
+Date: Tue, 17 Aug 2010 20:00:29 GMT
+Server: Apache mod_fcgid/2.3.5 mod_auth_passthrough/2.1 mod_bwlimited/1.4 FrontPage/5.0.2.2635
+Location: [http://localhost/checkout](https://link.jianshu.com/?t=http://localhost/checkout)<CRLF>
+<CRLF>
+<script>alert('hello')</script>
+
+这个页面可能会意外地执行隐藏在URL中的javascript。类似的情况不仅发生在重定向（Location header）上，也有可能发生在其它headers中，如Set-Cookie header。这种攻击如果成功的话，可以做很多事，例如：执行脚本、设置额外的cookie（<CRLF>Set-Cookie: evil=value）等。
+避免这种攻击的方法，就是过滤所有的response headers，除去header中出现的非法字符，尤其是CRLF。
+
+服务器一般会限制request headers的大小。例如Apache server默认限制request header为8K。如果超过8K，Aapche Server将会返回400 Bad Request响应。
+对于大多数情况，8K是足够大的。假设应用程序把用户输入的某内容保存在cookie中,就有可能超过8K.攻击者把超过8k的header链接发给受害者,就会被服务器拒绝访问.解决办法就是检查cookie的大小,限制新cookie的总大写，减少因header过大而产生的拒绝访问攻击
+测试:
+结果控制台输出：SEC7130: “[http://weibo.com/u/1931138954/home?wvr=5&lf=reg%2Fcheckout%0D%0A%0D%0A%3Cscript%3Ealert%28%27hello%27%29%3C%2Fscript%3E](https://link.jianshu.com/?t=http://weibo.com/u/1931138954/home?wvr=5&lf=reg%2Fcheckout%0D%0A%0D%0A%3Cscript%3Ealert%28%27hello%27%29%3C%2Fscript%3E)”中检测到可能的跨站点脚本操作。内容已被 XSS 筛选器修改。
+
+### 一、XSS
+
+【Cross Site Script】跨站脚本攻击 
+
+恶意攻击者往Web页面里插入恶意Script代码，当用户浏览该页之时，嵌入其中Web里面的Script代码会被执行，从而达到恶意攻击用户的目的。
+
+ **1、Reflected XSS（反射型攻击：非持久型，多出现于搜索页面）**
+
+基于反射的XSS攻击，主要依靠站点服务端返回脚本，在客户端触发执行从而发起Web攻击。Web客户端使用Server端脚本生成页面为用户提供数据时，如果未经验证的用户数据被包含在页面中而未经HTML实体编码，客户端代码便能够注入到动态页面中。
+
+ **2、Stored XSS （存储型攻击：持久性；多出现于评论页面和编辑文章页面）**
+
+该类型是应用最为广泛而且有可能影响到Web服务器自身安全的漏洞，骇客将攻击脚本上传到Web服务器上，使得所有访问该页面的用户都面临信息泄漏的可能，其中也包括了Web服务器的管理员。 
+
+**3、DOM-based XSS**
+
+ 本地利用漏洞，这种漏洞存在于页面中客户端脚本自身。
+
+**4、防御措施**
+
+1.**对所有用户提交内容进行可靠的输入验证**，包括对URL、查询关键字、HTTP头、POST数据等，仅接受指定长度范围内、采用适当格式、采用所预期的字符的内容提交，对其他的一律过滤。
+
+2.实现**Session标记(session tokens)、CAPTCHA系统**或者HTTP引用头检查，以防功能被第三方网站所执行。
+
+3.确认接收的的内容被妥善的规范化，仅包含最小的、安全的Tag(没有javascript)，去掉任何对远程内容的引用(尤其是样式表和javascript)，使用**HT**TP only的cookie（只有服务器才能访问cookies）。
+
+4**.使用HTTPS**。
+5**.后台输入的校验**。
+
+ 当然，如上操作将会降低Web业务系统的可用性，用户仅能输入少量的制定字符，人与系统间的交互被降到极致，仅适用于信息发布型站点。
+
+[XSS的原理分析与解剖](http://www.cnblogs.com/lovesong/p/5199623.html) 
+
+[XSS攻击及防御](http://blog.csdn.net/ghsau/article/details/17027893)
+
+### **二、 CSRF** 
+
+【Cross Site Request Forgery】站点伪造请求 
+
+跨站点参考伪造通过在访问用户被认为已经通过身份验证的Web应用程序的页面中包含恶意代码或链接来工作。 如果该Web应用程序的会话没有超时，攻击者可能执行未授权的命令。
+
+**防御措施**
+
+1.验证 HTTP Referer 字段 ;
+
+2.在请求地址中添加 token 并验证 ;
+
+3.在 HTTP 头中自定义属性并验证
+
+4.正确使用GET,POST和Cookie；
+
+5.在非GET请求中增加伪随机数；
+
+[预防CSRF攻击](https://my.oschina.net/biezhi/blog/490249) 
+
+[CSRF攻击介绍及防御](http://blog.csdn.net/u012322925/article/details/51290054)
+
+### 三、SQL注入** 
+
+ 防御措施
+
+ 采用sql语句预编译和绑定变量，是防御sql注入的最佳方法。采用JDBC的预编译语句集，它内置了处理SQL注入的能力，只要使用它的setXXX方法传值即可。
+
+原理：采用了PreparedStatement，就会将sql语句：”select id, no from user where id=?” 预先编译好，也就是SQL引擎会预先进行语法分析，产生语法树，生成执行计划，也就是说，后面你输入的参数，无论你输入的是什么，都不会影响该sql语句的 语法结构了,只会被当做字符串字面值参数。 
+
+使用正则表达式来过滤一些sql关键字，如or、where等。 
+
+[【Web安全与防御】简析Sql注入与防御措施](http://blog.csdn.net/acmman/article/details/48862841)
+
+ 
+
+### **四、cookie窃取和session劫持**
+
+Cookie包含了浏览器客户端的用户凭证，相对较小。Session则维护在服务器，用于维护相对较大的用户信息。cookie被攻击者窃取、session被劫持即攻击者劫持会话，合法登录了你的账户，可以浏览大部分用户资源。 
+**用通俗的语言，Cookie是钥匙，Session是锁芯。** 
+**最基本的cookie窃取方式：xss漏洞。** 
+
+[cookie窃取和session劫持](http://www.2cto.com/article/201411/355266.html)
+
+ 
+
+###  **五、钓鱼攻击【重定向攻击】**
+
+ 攻击者会发送给受害者一个合法链接，当链接被点击时，用户被导向一个似是而非的非法网站，从而达到骗取用户信任、窃取用户资料的目的。
+
+防御措施 
+
+对所有的重定向操作进行审核,以避免重定向到一个危险的地方.
+
+ 
+
+常见解决方案是白名单,将合法的要重定向的url加到白名单中,非白名单上的域名重定向时拒之;
+
+重定向token,在合法的url上加上token,重定向时进行验证.
+
+ 
+
+###  **六、Http Heads攻击**
+
+ HTTP协议在Response header和content之间，有一个空行，即两组CRLF（0x0D 0A）字符。这个空行标志着headers的结束和content的开始。“聪明”的攻击者可以利用这一点。只要攻击者有办法将任意字符“注入”到headers中，这种攻击就可以发生。
+
+防御措施 
+
+过滤所有的response headers，除去header中出现的非法字符，尤其是CRLF。
+
+ **七、拒绝服务攻击【DoS】**
+
+ 攻击者想办法让目标机器停止提供服务：一是使用SYN flood迫使服务器的缓冲区满，不接收新的请求；二是使用IP欺骗，迫使服务器把非法用户的连接复位，影响合法用户的连接。
+
+**防御措施** 
+
+**对于SYN flood：启用SYN Cookie、设置SYN最大队列长度以及设置SYN+ACK最大重试次数。**
+
+ 
+
+**八、文件上传攻击** 
+
+用户上传一个可执行的脚本文件，并通过此脚本文件获得了执行服务端命令的能力。 
+
+**分类**
+
+**文件名攻击**：上传的文件采用上传之前的文件名,可能造成客户端和服务端字符码不兼容,导致文件名乱码问题;文件名包含脚本,从而造成攻击.
+
+**文件后缀攻击**：上传的文件的后缀可能是exe可执行程序,js脚本等文件,这些程序可能被执行于受害者的客户端,甚至可能执行于服务器上.因此我们必须过滤文件名后缀,排除那些不被许可的文件名后缀.
+
+**文件内容攻击**：IE6有一个很严重的问题 , 它不信任服务器所发送的content type，而是自动根据文件内容来识别文件的类型，并根据所识别的类型来显示或执行文件.如果上传一个gif文件,在文件末尾放一段js攻击脚本,就有可能被执行.这种攻击,它的文件名和content type看起来都是合法的gif图片,然而其内容却包含脚本,这样的攻击无法用文件名过滤来排除，而是必须扫描其文件内容，才能识别。
+
+## 防抖和节流
+
+​       JS中防抖和节流，是前端中最基础的性能优化，在绑定 scroll 、resize 这类事件时，当它发生时，它被触发的频次非常高，间隔很近。如果事件中涉及到大量的位置计算、DOM 操作、元素重绘等工作且这些工作无法在下一个 scroll 事件触发前完成，就会造成浏览器掉帧。加之用户鼠标滚动往往是连续的，就会持续触发 scroll 事件导致掉帧扩大、浏览器 CPU 使用率增加、用户体验受到影响。尤其是在涉及与后端的交互中，前端依赖于某种事件如resize，scroll，发送Http请求，在这个过程中，如果不做防抖处理，那么在事件触发的一瞬间，会有很多个请求发过去，增加了服务端的压力。今天又接触到一个项目，里面的响应式做的非常到位，同时性能优化做的非常好，所以想把JS的防抖和节流做一个总结。
+
+![img](https://images2015.cnblogs.com/blog/608782/201605/608782-20160516205933748-797476534.gif)
+
+### 一、函数防抖（debounce）
+
+​         当持续触发事件时，一定时间段内没有再触发事件，事件处理函数才会执行一次，如果设定的时间到来之前，又一次触发了事件，就重新开始延时。如下图，持续触发scroll事件时，并不执行handle函数，当1000毫秒内没有触发scroll事件时，才会延时触发scroll事件。
+
+下面通过一段代码来演示一个防抖的例子
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            height: 5000px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function debounce(fn, wait) {
+            var timeout = null;
+            return function() {
+                if(timeout !== null)
+                    clearTimeout(timeout);
+                timeout = setTimeout(fn, wait);
+            }
+        }
+        // 处理函数
+        function handle() {
+            console.log(Math.random());
+        }
+        // 滚动事件
+        window.addEventListener('scroll', debounce(handle, 1000));
+    </script>
+</body>
+</html>
+```
+
+大概的效果就是这个样子： 
+
+![img](https://img-blog.csdn.net/20180917111553767?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMDAwODkx/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+这是我自己的运行结果：
+
+![img](https://img-blog.csdn.net/20180917105458358?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMDAwODkx/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+
+
+### 二、函数节流（throttle）
+
+​        当持续触发事件时，保证一定时间段内只调用一次事件处理函数。节流通俗解释就比如我们水龙头放水，阀门一打开，水哗哗的往下流，秉着勤俭节约的优良传统美德，我们要把水龙头关小点，最好是如我们心意按照一定规律在某个时间间隔内一滴一滴的往下滴。如下图，持续触发scroll事件时，并不立即执行handle函数，每隔1000毫秒才会执行一次handle函数。
+
+#### 时间戳方案 
+
+```javascript
+  var throttle = function(func, delay) {
+            var prev = Date.now();
+            return function() {
+                var context = this;
+                var args = arguments;
+                var now = Date.now();
+                if (now - prev >= delay) {
+                    func.apply(context, args);
+                    prev = Date.now();
+                }
+            }
+        }
+        function handle() {
+            console.log(Math.random());
+        }
+        window.addEventListener('scroll', throttle(handle, 1000));
+```
+
+#### 定时器方案 
+
+```javascript
+var throttle = function(func, delay) {
+            var timer = null;
+            return function() {
+                var context = this;
+                var args = arguments;
+                if (!timer) {
+                    timer = setTimeout(function() {
+                        func.apply(context, args);
+                        timer = null;
+                    }, delay);
+                }
+            }
+        }
+        function handle() {
+            console.log(Math.random());
+        }
+        window.addEventListener('scroll', throttle(handle, 1000));
+```
+
+####  时间戳+定时器
+
+```javascript
+var throttle = function(func, delay) {
+     var timer = null;
+     var startTime = Date.now();
+     return function() {
+             var curTime = Date.now();
+             var remaining = delay - (curTime - startTime);
+             var context = this;
+             var args = arguments;
+             clearTimeout(timer);
+              if (remaining <= 0) {
+                    func.apply(context, args);
+                    startTime = Date.now();
+              } else {
+                    timer = setTimeout(func, remaining);
+              }
+      }
+}
+function handle() {
+      console.log(Math.random());
+}
+
+ window.addEventListener('scroll', throttle(handle, 1000));
+```
+
+效果如下：
+
+![img](https://img-blog.csdn.net/20180917111627196?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMDAwODkx/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+### 三、总结
+
+**函数防抖：**将几次操作合并为一此操作进行。原理是维护一个计时器，规定在delay时间后触发函数，但是在delay时间内再次触发的话，就会取消之前的计时器而重新设置。这样一来，只有最后一次操作能被触发。
+
+**函数节流：**使得一定时间内只触发一次函数。原理是通过判断是否到达一定时间来触发函数。
+
+**区别：** 函数节流不管事件触发有多频繁，都会保证在规定时间内一定会执行一次真正的事件处理函数，而函数防抖只是在最后一次事件后才触发一次函数。 比如在页面的无限加载场景下，我们需要用户在滚动页面时，每隔一段时间发一次 Ajax 请求，而不是在用户停下滚动页面操作时才去请求数据。这样的场景，就适合用节流技术来实现。
+
 ## 前端性能优化常用总结
 
 参考：<https://www.jianshu.com/p/fe32ef31deed>
@@ -12,9 +699,9 @@
 
 ### 网络方面
 
-web应用，总是会有一部分的时间浪费在网络连接和资源下载方面。往往建立一次网络连接是需要时间成本的。而且浏览器同一时间所发送的网络请求数是有限的。所以，这个层面的优化可以从「减少请求数目」开始：
+web应用，总是会有一部分的时间浪费在网络连接和资源下载方面。**往往建立一次网络连接是需要时间成本的。而且浏览器同一时间所发送的网络请求数是有限的**。所以，这个层面的优化可以从「减少请求数目」开始：
 
-1. **减少http请求**：在YUI35规则中也有提到，主要是优化js、css和图片资源三个方面，因为html是没有办法避免的。因此，我们可以做一下的几项操作：
+1. **减少http请求**：在YUI35规则中也有提到，**主要是优化js、css和图片资源三个方面**，因为html是没有办法避免的。因此，我们可以做一下的几项操作：
 
    1. 合并js文件
 
@@ -24,7 +711,11 @@ web应用，总是会有一部分的时间浪费在网络连接和资源下载�
 
    4. 使用base64表示简单的图片
 
-   上述四个方法，前面两者我们可以使用webpack之类的打包工具进行打包；雪碧图的话，也有专门的制作工具；图片的编码是使用base64的，所以，对于一些简单的图片，例如空白图等，可以使用base64直接写入html中。
+   上述四个方法，前面两者我们可以使用webpack之类的打包工具进行打包；
+
+   雪碧图的话，也有专门的制作工具；
+
+   图片的编码是使用base64的，所以，对于一些简单的图片，例如空白图等，可以使用base64直接写入html中。
 
 回到之前网络层面的问题，除了减少请求数量来加快网络加载速度，往往整个资源的体积也是，平时我们会关注的方面。
 
@@ -35,11 +726,17 @@ web应用，总是会有一部分的时间浪费在网络连接和资源下载�
 - css压缩
 - 图片压缩
 
-gzip压缩主要是针对html文件来说的，它可以将html中重复的部分进行一个打包，多次复用的过程。js的混淆可以有简单的压缩(将空白字符删除)、丑化(丑化的方法，就是将一些变量缩小)、或者可以使用php对js进行混淆加密。css压缩，就是进行简单的压缩。图片的压缩，主要也是减小体积，在不影响观感的前提下，尽量压缩图片，使用png等图片格式，减少矢量图、高清图等的使用。这样子的做法不仅可以加快网页显示，也能减少流量的损耗。
+gzip压缩主要是针对html文件来说的，它**可以将html中重复的部分进行一个打包，多次复用的过程**。
+
+js的混淆可以有**简单的压缩(将空白字符删除)、丑化(丑化的方法，就是将一些变量缩小)、或者可以使用php对js进行混淆加密。**
+
+css压缩，就是进行简单的压缩。
+
+图片的压缩，**在不影响观感的前提下，尽量压缩图片，使用png等图片格式，减少矢量图、高清图等的使用**。这样子的做法不仅可以加快网页显示，也能减少流量的损耗。
 
 除了以上两部分的操作之外，在网络层面我们还需要做好缓存工作。真正的性能优化来说，缓存是效率最高的一种，往往缩短的加载时间也是最大的。
 
-2. **缓存**：可以通过以下几个方面来描述：
+3.**缓存**：可以通过以下几个方面来描述：
 
 - DNS缓存
 - CDN部署与缓存
@@ -47,29 +744,29 @@ gzip压缩主要是针对html文件来说的，它可以将html中重复的部�
 
 由于浏览器会在DNS解析步骤中消耗一定的时间，所以，对于一些高访问量网站来说，做好DNS的缓存工作，就会一定程度上提升网站效率。
 
-CDN缓存，CDN作为静态资源文件的分发网络，本身就已经提升了，网站静态资源的获取速度，加快网站的加载速度，同时也给静态资源做好缓存工作，有效的利用已缓存的静态资源，加快获取速度。
+利用CDN缓存，CDN作为静态资源文件的分发网络，本身就已经提升了网站静态资源的获取速度，同时也给静态资源做好缓存工作，有效的利用已缓存的静态资源，加快获取速度。
 
-http缓存，也是给资源设定缓存时间，防止在有效的缓存时间内对资源进行重复的下载，从而提升整体网页的加载速度。
+http缓存，给资源设定缓存时间，防止在有效的缓存时间内对资源进行重复的下载，从而提升整体网页的加载速度。
 
 其实，网络层面的优化还有很多，特别是针对于移动端页面来说。众所周知，移动端对于网络的敏感度更加的高，除了目前的4G和WIFI之外，其他的移动端网络相当于弱网环境，在这种环境下，资源的缓存利用是相当重要的。而且，减少http的请求次数，也是至关重要的，移动端弱网环境下，对于http请求的时间也会增加。所以，我们可以看一下我们在移动端网络方面可以做的优化：
 
-1. **移动端优化**：使用以下几种方式来加快移动端网络方面的优化：
+4. **移动端优化**：使用以下几种方式来加快移动端网络方面的优化：
 
-   1. 使用长cache，减少重定向
+1. 使用长cache，减少重定向
 
-   2. 首屏优化，保证首屏加载数据小于14kb
+2. 首屏优化，保证首屏加载数据小于14kb
 
-   3. 不滥用web字体
+3. 不滥用web字体
 
-   「使用长cache」，可以使得移动端的部分资源设定长期缓存，这样可以保证资源不用向服务器发送请求，来比较资源是否更新，从而避免304的情况。304重定向，在PC端或许并不会影响网页的加载速度，但是，在移动端网络不稳定的前提下，多一次请求，就多了一部分加载时间。
+**「使用长cache」，可以使得移动端的部分资源设定长期缓存，这样可以保证资源不用向服务器发送请求，来比较资源是否更新，从而避免304的情况。**304重定向，在PC端或许并不会影响网页的加载速度，但是，在移动端网络不稳定的前提下，多一次请求，就多了一部分加载时间。
 
-   「首屏优化」，对于移动端来说是至关重要的。2s时间是用户的最佳体验，一旦超出这个时间，将会导致用户的流失。所以，针对移动端的网络情况，不可能在这么短时间内加载完成所有的网页资源，所以我们必须保证首屏中的内容被优先显示出来，而且基于TCP的慢启动和拥塞控制，第一个14kb的数据是非常重要的，所以需要保证首部加载数据能够小于14kb。
+**「首屏优化」，对于移动端来说是至关重要的。2s时间是用户的最佳体验，一旦超出这个时间，将会导致用户的流失。所以，针对移动端的网络情况，不可能在这么短时间内加载完成所有的网页资源，所以我们必须保证首屏中的内容被优先显示出来，而且基于TCP的慢启动和拥塞控制，第一个14kb的数据是非常重要的，所以需要保证首页加载数据能够小于14kb。**
 
-   「不滥用web字体」，web字体的好处就是，可以代替某些图片资源，但是，在移动端过多的web字体的使用，会导致页面资源加载的繁重，所以，慎用web字体
+「不滥用web字体」，web字体的好处就是，可以代替某些图片资源，但是，**在移动端过多的web字体的使用，会导致页面资源加载的繁重**，所以，慎用web字体
 
 ### 渲染和DOM操作方面
 
-首先，简单的聊一下优化渲染的重要性。在网页初步加载时，获取到HTML文件之后，最初的工作是构建DOM和构建CSSOM两个树，之后将他们合并形成渲染树，最后对其进行打印。我们可以通过图片来看一下，简单的过程：
+首先，简单的聊一下优化渲染的重要性。在网页初步加载时，获取到HTML文件之后，最初的工作是**构建DOM和构建CSSOM两个树**，之后将他们合并形成渲染树，最后对其进行打印。我们可以通过图片来看一下，简单的过程：
 
 ![img](https:////upload-images.jianshu.io/upload_images/5797628-b2cd3a2d463b05fd?imageMogr2/auto-orient/strip%7CimageView2/2/w/888/format/webp)
 
@@ -81,36 +778,49 @@ DOM渲染
 
 1. **优化网页渲染**：
 
-   1. css的文件放在头部，js文件放在尾部或者异步
+   1. css的文件放在头部，js文件放在**尾部或者异步**
 
    2. 尽量避免內联样式
 
-   css文件放在「头部加载」，可以保证解析DOM的同时，解析css文件。因为，CSS（外链或内联）会阻塞整个DOM的渲染，然而DOM解析会正常进行，所以将css文件放在头部进行解析，可以加快网页的构建速度。假设将其放在尾部，那时DOM树几乎构建，这时就得等到CSSOM树构建完成，才能够继续下面的步骤。
+   css文件放在「头部加载」，**可以保证解析DOM的同时，解析css文件**。**因为，CSS（外链或内联）会阻塞整个DOM的渲染，然而DOM解析会正常进行，所以将css文件放在头部进行解析，可以加快网页的构建速度。**假设将其放在尾部，那时DOM树几乎构建，这时就得等到CSSOM树构建完成，才能够继续下面的步骤。
 
-   「js放在尾部」：js文件不同，将js文件放在尾部或者异步加载的原因是JS（外链或内联）会阻塞后续DOM的解析，后续DOM的渲染也将被阻塞，而且一旦js中遇到DOM元素的操作，很可能会影响。这方面可以推荐一篇文章——[异步脚本载入提高页面性能](https://link.jianshu.com?t=http://harttle.com/2016/05/18/async-javascript-loading.html)。
+   「js放在尾部」：js文件不同，将js文件放在尾部或者异步加载的原因是**JS（外链或内联）会阻塞后续DOM的解析**，后续DOM的渲染也将被阻塞，而且一旦js中遇到DOM元素的操作，很可能会影响。这方面可以推荐一篇文章——[异步脚本载入提高页面性能](https://link.jianshu.com?t=http://harttle.com/2016/05/18/async-javascript-loading.html)。
 
-   「避免使用内联样式」，可以有效的减少html的体积，一般考虑内联样式的时候，往往是样式本身体积比较小，往往加载网络资源的时间会大于它的时候。
+   **「避免使用内联样式」，可以有效的减少html的体积**，一般考虑内联样式的时候，往往是样式本身体积比较小，往往加载网络资源的时间会大于它的时候。
 
 除了页面渲染层面的优化，当然最重要的就是DOM操作方面的优化，这部分的优化应该是最多的，而且也是平时开发可以注意的地方。如果开发前期明白这些原理，同时付诸实践的话，就可以在后期的性能完善上面少下很多功夫。那么，接下来我们可以来看一下具体的操作：
 
 2. **DOM操作优化**：
 
 - 避免在document上直接进行频繁的DOM操作
+
 - 使用classname代替大量的内联样式修改
+
 - 对于复杂的UI元素，设置position为absolute或fixed
+
+  
+
 - 尽量使用css动画
+
 - 使用requestAnimationFrame代替setInterval操作
+
 - 适当使用canvas
+
 - 尽量减少css表达式的使用
+
 - 使用事件代理
 
-前面三个操作，其实都是希望『减少回流和重绘』。其实，进行一次DOM操作的代价是非常之大的，以前可以通过网页操作是否卡顿来进行判断，但是，现代浏览器的进步已经大大减少了这方面的影响。但是，我们还是需要清楚，如何去减少回流和重绘的问题。因为这里不想细说这方面的知识，想要了解的话，可以看这篇文章——[回流与重绘：CSS性能让JavaScript变慢？](https://link.jianshu.com?t=http://www.zhangxinxu.com/wordpress/2010/01/%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%EF%BC%9Acss%E6%80%A7%E8%83%BD%E8%AE%A9javascript%E5%8F%98%E6%85%A2%EF%BC%9F/)。这可是张鑫旭大大的一篇文章呦(^.^)。
+前面三个操作，其实都是希望『减少回流和重绘』。其实，进行一次DOM操作的代价是非常之大的，以前可以通过网页操作是否卡顿来进行判断，但是，现代浏览器的进步已经大大减少了这方面的影响。但是，我们还是需要清楚，如何去减少回流和重绘的问题。因为这里不想细说这方面的知识，想要了解的话，可以看这篇文章——[回流与重绘：CSS性能让JavaScript变慢？](https://link.jianshu.com?t=http://www.zhangxinxu.com/wordpress/2010/01/%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%EF%BC%9Acss%E6%80%A7%E8%83%BD%E8%AE%A9javascript%E5%8F%98%E6%85%A2%EF%BC%9F/)。
 
-「尽量使用css动画」，是因为本身css动画比较简单，而且相较于js的复杂动画，浏览器本身对其进行了优化，使用上面不会出现卡顿等问题。「使用requestAnimationFrame代替setInterval操作」，相信大家都有所耳闻，setInterval定时器会有一定的延时，对于变动性高的动画来说，会出现卡顿现象。而requestAnimationFrame正好解决的整个问题。
+「尽量使用css动画」，是因为相较于js的复杂动画，css动画比较简单，浏览器本身对其进行了优化，使用上面不会出现卡顿等问题。
 
-「适当使用canvas」，不得不说canvas是前端的一个进步，出现了它之后，前端界面的复杂性也随之提升了。一些难以完成的动画，都可以使用canvas进行辅助完成。但是，canvas使用频繁的话，会加重浏览器渲染的压力，同时导致性能的下降。所以，适当时候使用canvas是一个不错的建议。
+「使用requestAnimationFrame代替setInterval操作」，相信大家都有所耳闻，**setInterval定时器会有一定的延时**，对于变动性高的动画来说，会出现卡顿现象。而requestAnimationFrame正好解决的整个问题。
 
-「尽量减少css表达式的使用」，这个在YUI规则中也被提到过，往往css的表达式在设计之初都是美好的，但在使用过程中，由于其频繁触发的特性，会拖累网页的性能，出现卡顿。因此在使用过程中尽量减少css表达式的使用，可以改换成js进行操作。「使用事件代理」：往往对于具备冒泡性质的事件来说，使用事件代理不失为一种好的方法。举个例子：一段列表都需要设定点击事件，这时如果你给列表中的每一项设定监听，往往会导致整体的性能下降，但是如果你给整个列表设置一个事件，然后通过点击定位目标来触发相应的操作，往往性能就会得到改善。
+「适当使用canvas」，不得不说canvas是前端的一个进步，出现了它之后，前端界面的复杂性也随之提升了。一些难以完成的动画，都可以使用canvas进行辅助完成。但是，**canvas使用频繁的话，会加重浏览器渲染的压力**，**同时导致性能的下降**。所以，适当时候使用canvas是一个不错的建议。
+
+「尽量减少css表达式的使用」，这个在YUI规则中也被提到过，往往css的表达式在设计之初都是美好的，但在使用过程中，**由于其频繁触发的特性，会拖累网页的性能，出现卡顿**。因此在使用过程中尽量减少css表达式的使用，可以改换成js进行操作。
+
+「使用事件代理」：往往对于具备冒泡性质的事件来说，使用事件代理不失为一种好的方法。举个例子：一段列表都需要设定点击事件，这时如果你给列表中的每一项设定监听，往往会导致整体的性能下降，但是如果你给整个列表设置一个事件，然后通过点击定位目标来触发相应的操作，往往性能就会得到改善。
 
 DOM操作的优化，还有很多，当然也包括移动端的。这个会在之后移动端优化部分被提及，此处先卖个关子。上面我们概述了开始渲染的时候和DOM操作的时候的一些注意事项。接下来要讲的是一些小细节的注意，这些细节可能对于页面影响不大，但是一旦堆积多了，性能也会有所影响。
 
@@ -136,9 +846,9 @@ DOM操作的优化，还有很多，当然也包括移动端的。这个会在�
    - HTML的viewport设置
    - 开启GPU渲染加速
 
-   首先，长列表滚动问题，是移动端需要面对的，IOS尽量使用局部滚动，android尽量使用全局滚动。同时，需要给body添加上-webkit-overflow-scrolling: touch来优化移动段的滚动。如果有兴趣的同学，可以去了解一下ios和android滚动操作上的区别以及优化。
+   首先，长列表滚动问题，是移动端需要面对的，**IOS尽量使用局部滚动，android尽量使用全局滚动。同时，需要给body添加上-webkit-overflow-scrolling: touch来优化移动段的滚动**。如果有兴趣的同学，可以去了解一下ios和android滚动操作上的区别以及优化。
 
-   「防抖和节流」，设计到滚动等会被频繁触发的DOM事件，需要做好防抖和节流的工作。它们都是为了限制函数的执行频次，以优化函数触发频率过高导致的响应速度跟不上触发频率，出现延迟，假死或卡顿的现象。
+   「防抖和节流」，**设计到滚动等会被频繁触发的DOM事件，需要做好防抖和节流的工作。它们都是为了限制函数的执行频次**，以优化函数触发频率过高导致的响应速度跟不上触发频率，出现延迟，假死或卡顿的现象。
 
    > 介绍：**函数防抖**，当调用动作过n毫秒后，才会执行该动作，若在这n毫秒内又调用此动作则将重新计算执行时间；**函数节流**，预先设定一个执行周期，当调用动作的时刻大于等于执行周期则执行该动作，然后进入下一个新周期。
 
@@ -146,7 +856,7 @@ DOM操作的优化，还有很多，当然也包括移动端的。这个会在�
 
    「HTML的viewport设置」，可以防止页面的缩放，来优化性能。
 
-   「开启GPU渲染加速」，小伙伴们一定听过CPU吧，但是这里的GPU不能和CPU混为一谈呦。GPU的全名是Graphics Processing Unit，是一种硬件加速方式。一般的css渲染，浏览器的渲染引擎都不会使用到它。但是，在3D渲染时，计算量较大，繁重，浏览器会开启显卡的硬件加速来帮助完成这些操作。所以，我们这里可以使用css中的translateZ设定，来欺骗浏览器，让其帮忙开启GPU加速，加快渲染进程。
+   「开启GPU渲染加速」，小伙伴们一定听过CPU吧，但是这里的GPU不能和CPU混为一谈呦。GPU的全名是Graphics Processing Unit，是一种硬件加速方式。一般的css渲染，浏览器的渲染引擎都不会使用到它。但是，在3D渲染时，计算量较大，繁重，浏览器会开启显卡的硬件加速来帮助完成这些操作。所以，我们这里可以**使用css中的translateZ设定，来欺骗浏览器，让其帮忙开启GPU加速，加快渲染进程**。
 
 ### 数据方面
 
@@ -160,7 +870,7 @@ DOM操作的优化，还有很多，当然也包括移动端的。这个会在�
 
    「图片预加载」，预加载的寓意就是提前加载内容。而图片的预加载往往会被用在图片资源比较大，即时加载时会导致很长的等待过程时，才会被使用的。常见场景：图片漫画展示时。往往会预加载一张到两张的图片。
 
-   「图片懒加载」，懒加载或许你是第一次听说，但是，这种方式在开发中会被经常使用。首先，我们需要明白一个道理：往往只有看到的资源是必须的，其他资源是可以随着用户的滚动，随即显示的。所以，特别是对于图片资源特别多的网站来说，做好图片的懒加载是可以大大提升网页的载入速度的。
+   「图片懒加载」，懒加载或许你是第一次听说，但是，这种方式在开发中会被经常使用。首先，我们需要明白一个道理：**往往只有看到的资源是必须的，其他资源是可以随着用户的滚动，随即显示的**。所以，特别是对于图片资源特别多的网站来说，做好图片的懒加载是可以大大提升网页的载入速度的。
 
    > 常见的图片懒加载的方式就是：在最初给图片的src设置一个比较简单的图片，然后将图片的真实地址设置给自定义的属性，做一个占位，然后给图片设置监听事件，一旦图片到达视口范围，从图片的自定义属性中获取出真是地址，然后赋值给src，让其进行加载。
 
@@ -168,17 +878,17 @@ DOM操作的优化，还有很多，当然也包括移动端的。这个会在�
 
 讲完了图片这一块数据资源的处理，往往我们需要去优化一下异步请求这一部分的内容。因为，异步的数据获取也是前端不可分割的。这一部分我们也可以做一定的处理：
 
-1. **异步请求的优化**：
+2.**异步请求的优化**：
 
-   - 使用正常的json数据格式进行交互
-   - 部分常用数据的缓存
-   - 数据埋点和统计
+- 使用正常的json数据格式进行交互
+- 部分常用数据的缓存
+- 数据埋点和统计
 
-   「JSON交互」，JSON的数据格式轻巧，结构简单，往往可以大大优化前后端的数据通信。
+「JSON交互」，JSON的数据**格式轻巧，结构简单**，往往可以大大优化前后端的数据通信。
 
-   「常用数据的缓存」，可以将一些用户的基本信息等常用的信息做一个缓存，这样可以保证ajax请求的减少。同时，HTML5新增的storage的内容，也不用怕cookie暴露，引起的信息泄漏问题。
+「常用数据的缓存」，**可以将一些用户的基本信息等常用的信息做一个缓存，这样可以保证ajax请求的减少**。同时，HTML5新增的storage的内容，也不用怕cookie暴露，引起的信息泄漏问题。
 
-   「数据埋点和统计」，对于资深的程序员来说，比较了解。而且目前的大部分公司也会做这方面的处理。有心的小伙伴可以自行查阅。
+「**数据埋点和统计」**，对于资深的程序员来说，比较了解。而且目前的大部分公司也会做这方面的处理。有心的小伙伴可以自行查阅。
 
 最后，还有就是大量数据的运算。对于javascript语言来说，本身的单线程就限制了它并不能计算大量的数据，往往会造成页面的卡顿。而可能业务中有些复杂的UI需要去运行大量的运算，所以，**webWorker的使用**是至关重要的。或许，前端标准普及的落后，会导致大家对于这些新生事物的短暂缺失吧。
 
