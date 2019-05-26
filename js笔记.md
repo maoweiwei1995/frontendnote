@@ -2,6 +2,290 @@
 
 # js笔记
 
+## 创建对象方法
+
+### **一、Object构造函数/字面量**
+
+```html
+<script>
+    var person1 = new Object();
+    person1.name = 'qiurx';
+    person1.sayName = function() {
+        console.log(this.name);
+    }
+    person1.sayName();
+</script>
+<script>
+    var person1 = {
+        name : 'qiurx',
+        sayName : function() {
+            console.log(this.name);
+        }
+    }
+    person1.sayName();
+</script>
+```
+
+简单。
+ 但这样创建很多对象，会产生很多重复代码（每个对象都要写代码重新加属性和方法），最早期的方法。
+ 为了解决这个缺点，需要对重复内容进行抽象，就出现了工厂模式。
+
+###  **二、工厂模式**
+
+ 软件工程l领域广知的一种模式，抽象了创建具体对象的过程。ES6之前没有‘class’，则用函数来封装以特定接口创建对象的细节。
+
+```html
+<script>
+    function createPerson(name){
+        var obj = new Object();
+        obj.name = name;
+        obj.sayName = function(){
+            console.log(this.name);
+        }
+        return obj;
+    }
+    var person1 = createPerson('qiurx');
+    person1.sayName();
+    console.log(person1 instanceof Object);   //true
+</script>
+```
+
+通过函数传参可以方便创建多个相似的不同对象，减少了重复代码。
+ 但不能识别对象，所有实例都是Object类型。
+ 然后就出现了构造函数模式。
+
+###  **三、构造函数模式**
+
+ 不同于Object、Array等原生构造函数，我们可以创建自定义构造函数，从而创建特定类型的对象。
+
+```html
+<script>
+    function Person(name){   //一半构造函数首字母大写作为区分
+        this.name = name;
+        this.sayName = function(){
+            console.log(this.name);
+        }
+        console.log('执行了构造函数');
+    }
+    var person1 = new Person('qiurx');   //用new操作符实例化对象
+    //要创建新对象，必须用new操作符（虽然构造函数也是函数，但不推荐和普通函数一样用）
+    //否则属性方法会被添加到window对象，而不是指向当前实例化的这个对象。
+    //1、创建一个新对象。2、将构造函数作用域赋值给新对象person1。
+    //3、执行构造函数中代码。4、返回新对象。
+    person1.sayName();   //qiurx
+    console.log(person1.constructor);   //查看实例的构造函数属性，指向Person()
+    console.log(person1 instanceof Object);   //true
+    console.log(person1 instanceof Person);   //true
+</script>
+```
+
+通过构造函数创建的对象的constructor（构造函数）属性，指向他的构造函数。所有对象都继承自Object，所以同时也是Object的实例。
+ 实例可以标志为一种特定的自定义类型，解决了工厂模式的标识问题。
+ 但同一对象的不同实例对象的相同方法不一样不等，冗余。
+
+```js
+var person2 = new Person('xiaoqiu');
+console.log(person1.sayName == person2.sayName);   //false
+```
+
+JS中所有都是对象包括函数，每定义一个函数，也就实例化了一个对象 。
+ 使用构造函数创建对象，每个方法都在每个实例上创建了一次，创建多个同样功能的function完全没有必要，耗资源。
+ 因此，又有一种解决方法，可以把构造函数中的方法提出来定义在外部。
+
+```html
+<script>
+    function Person(name){
+        this.name = name;
+        this.sayName = sayName;
+    }
+    function sayName(){
+        console.log(this.name);
+    }
+    var person1 = new Person('qiurx');
+    person1.sayName();   //qiurx
+</script>
+```
+
+把函数定义在构造函数外部全局，构造函数内把方法赋值为全局函数，这样每个实例对象的方法指针都指向同一个全局方法，实现了共享。
+ 但这样在全局定义函数就是为了被实例的对象调用，麻烦而且污染全局；而且如果构造函数有多个方法，要定义很多全局函数，构造函数无封装性可言。
+ 然后，就出现了原型模式。
+
+###  **四、原型模式**
+
+ 每个函数创建出来都有一个prototype属性，是个指针，指向一个对象。这个对象包含所有实例可以共享的属性和方法，prototype就是通过调用构造函数而创建的那个对象实例的原型对象。
+
+```html
+<script>
+    function Person(){
+        
+    }
+    //把所有属性方法都定义在原型中
+    Person.prototype.name = 'qiurx';
+    Person.prototype.sayName = function(){
+        console.log(this.name);
+    } 
+    //也可以使用对象字面量的写法
+    /* Person.prototype = {
+        name : 'qiurx',
+        sayName : function(){
+            console.log(this.name);
+        },
+    };
+    Object.defineProperty(Person.prototype,"constructor",{   //TODO这里不知道是啥
+    enumerable:false,
+    value:Person,
+    }); */
+    var person1 = new Person();
+    var person2 = new Person();
+    console.log(person1.sayName() == person2.sayName());   //qiurx,qiurx,true
+</script>
+```
+
+原型可以让所有实例实现属性和方法的共享。
+ 但是，这样省略了实例对象传参初始化参数，所有实例对象创建完属性都已默认；而且因为属性的共享，对于引用数据类型的属性（引用会指向同一内存地址），一个实例修改引用内的值也会影响到其他实例（引用重定向不会影响到其他实例）。这也是原型模式很少被单独使用的原因。
+
+```html
+<script>
+    function Person(){
+        
+    }
+    //把所有属性方法都定义在原型中
+    Person.prototype.attr = {
+        name : 'qiurx',
+        age : '24'
+    };
+    Person.prototype.sayName = function(){
+        console.log(this.attr.name);
+    }
+    var person1 = new Person();
+    var person2 = new Person();
+    person1.attr.name = 'xiaoqiu';
+    person1.sayName();   //xiaoqiu
+    person2.sayName();   //xiaoqiu
+    person1.attr = {   //引用重定向不影响
+        name : 'qiurx'
+    };
+    person1.sayName();   //qiurx
+    person2.sayName();   //xiaoqiu
+</script>
+```
+
+然后，又出现了另一种模式。
+
+###  **五、组合使用构造函数模式和原型模式**
+
+ 创建自定义类最常用的方法。
+ 构造函数用于定义实例属性；原型模式用于定义共享的方法和属性。这样做，每个实例都有自己一份属性，而且可以通过构造函数传参初始化这些属性；同时公共的方法又实现了贡献节省内存。
+
+```html
+<script>
+    function Person(name){
+        this.name = name;
+        this.course = ['语文'];
+    }
+    Person.prototype = {
+        constructor:Person,
+        sayCourse : function(){
+            console.log(this.course);
+        }
+    }
+    var person1 = new Person('qiurx');
+    var person2 = new Person('qiurx');
+    person1.course.push('数学');
+    person1.sayCourse();   //['语文'，'数学']
+    person2.sayCourse();   //['语文']
+</script>
+```
+
+实例属性在构造函数中定义，实现每个实例有自己的私有属性，修改不影响其他；而共享属性constructor和共享方法在原型中定义。
+ 配合使用最常用。
+
+- 工作中遇到过的问题：
+   构造函数或原型中的方法互相调用：`this.方法`，在给元素绑定事件调用实例对象方法时要注意下，直接事件后面的函数this会指向此元素对象（实际需要的是指向此对象实例），不能直接接对象的方法；要在后面的function里面调用实例对象的方法。
+
+```html
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script typet="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+    </head>
+    <body>
+        <input type="button" value="按钮"/>
+        
+        <script>
+            function Person(name){
+                this.name = name;
+                this.course = ['语文'];
+            }
+            Person.prototype = {
+                constructor:Person,
+                sayCourse : function(){
+                    this.sayName();
+                    console.log(this.course);
+                },
+                sayName : function(){
+                    console.log(this.name);
+                }
+            }
+            var person1 = new Person('qiurx');
+            $('input').click(function(){
+                //这样，实例对象方法中的this指向此对象
+                person1.sayCourse();   //qiurx ['语文']
+            });
+            $('input').on('click',function(){
+                person1.sayCourse();   //qiurx ['语文']
+            });
+            //事件后面直接接的函数中的this会指向此元素对象，即input元素对象
+            //$('input').click(person1.sayCourse);  //报错：this.sayName is not a function
+            //$('input').on('click',person1.sayCourse);   //报错：this.sayName is not a function
+        </script>
+    </body>
+</html>
+```
+
+混合模式写了构造函数还不够（相当于类吧），还需要额外进行原型的操作。对于其他语言的人来说会觉得别扭，即出现了动态原型模式。
+
+###  **六、动态原型模式**
+
+ 把所有信息都封装到构造函数中，包括原型。构造函数中同时使用了构造函数和原型，这就成了动态原型模式。
+
+```html
+<script>
+    function Person(name){
+        this.name = name;
+        if(typeof this.sayName != 'function'){   //判断是否已经初始化过原型
+            Person.prototype.sayName = function(){   //只进行一次初始化
+                console.log(this.name);
+            }
+        }
+    }
+    var person1 = new Person('qiurx');
+    person1.sayName();   //qiurx 
+    Person.prototype.sayName = function(){   //修改一下原型
+        console.log('猜猜我是谁');
+    }
+    var person2 = new Person('xiaoqiu');
+    person2.sayName();   //猜猜我是谁 
+    Person.prototype = {
+        sayName : function(){
+            console.log('最新的话语，我重写了原型');
+        }
+    }
+    var person3 = new Person('xiaoqiulll');
+    person3.sayName();   //最新的话语，我重写了原型
+    person1.sayName();   //猜猜我是谁 （联系断了）
+    person2.sayName();   //猜猜我是谁 （联系断了）
+</script>
+```
+
+- 注意（混合模式也一样）：如果要修改原型，不能用对象字面量的形式重写原型，即让新原型指向了新的内存地址，这会切断现有实例和新原型的联系。
+
+**七、寄生的构造函数模式**
+ 略。
+ **八、稳妥的构造函数模式**
+ 略。
+
 ### 类型检测
 
 ![img](https://mmbiz.qpic.cn/mmbiz_png/12mPmHVcSunnsWOSYTn5x8M9Vm5VfdbarhuEZMTO0DzviaSJs2RicXW95H9eHzFc8UQCBSq9ulibf0tarib7WCzBMQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
@@ -958,7 +1242,6 @@ function Cat(name){
 Cat.prototype = new Animal(); //这里Animal构造函数产生的属性和方法被屏蔽了
 
 // 组合继承也是需要修复构造函数指向的。
-
 Cat.prototype.constructor = Cat;
 
 // Test Code
@@ -1704,7 +1987,7 @@ Promise对象一共有3种状态，**pending`，`fullfilled`（又称为`resolve
 
 - resolved——任务已完成。
 
-- reject——任务出错。
+- rejected——任务出错。
 
   
 
@@ -1723,6 +2006,22 @@ romise对象初始时处于pending状态，其生命周期内只可能发生以�
 
 ```js
 let p = new Promise(executor(resolve, reject));
+//Promise 结构
+class Promise{
+    constructor(exector){
+        function resolve(){
+            
+        }
+        function reject(){
+            
+        }
+        exector(resolve,reject)    
+    }
+    then(){
+        
+    }
+}
+
 ```
 
 代码中`executor`是用户自定义的函数，用于实现具体异步操作流程。**该函数有两个参数`resolve`和`reject`，它们是Javascript引擎提供的函数，不需要用户实现。**在`executor`函数中，如果异步操作成功，则调用`resolve`将`Promise`的状态转换为`resolved`，`resolve`函数以结果数据作为参数。如果异步操作失败，则调用`reject`将`Promise`的状态转换为`rejected`，`reject`函数以具体错误对象作为参数。
@@ -1928,7 +2227,7 @@ p2.then(function (data) {
     return p1;  // (A)
 })
   .then(function (data) { // (B)
-    console.log(data); // 输出promise2
+    console.log(data); // 输出promise1
 });
 ```
 
@@ -2197,8 +2496,6 @@ JavaScript 继续执行而不必等待响应。此时，可以检测XHR 对象�
 段感兴趣，因为这时所有数据都已经就绪。不过，必须在调用open()之前指定onreadystatechange
 事件处理程序才能确保跨浏览器兼容性。下面来看一个例子。
 
-
-
 ```js
 var xhr = window.XMLHttpRequst? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP')
 xhr.onreadystatechange = function(){
@@ -2338,14 +2635,9 @@ function formsParams(data){
         }
         return arr.join("&");
 }
-var $.ajax = function(opts) {
+let $.ajax = function(opts) {
     // 创建xhr对象
-    var xhr = null
-    if (window.XMLHttpRequest) {
-        xhr = new window.XMLHttpRequest()
-    } else {
-        xhr = new ActiveXObject('Microsoft.XMLHTTP')
-    }
+let xhr = window.XMLHttpRequest? new windowXMLHttpRequest(): new ActiveXObject('Microsoft.XMLHTTP')
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4){
             if((xhr.status >= 200 && xhr.status < 300) && xhr.status == 304){
@@ -2356,8 +2648,8 @@ var $.ajax = function(opts) {
         }
     }
     // 获取参数
-    var url = opts.url
-    var params = formsParams(opts.data)
+    let url = opts.url
+    let params = formsParams(opts.data)
     // 根据 type发送请求
     if (opts.type.toLowerCase() == 'get') {
         xhr.open('get',url+'?'+params,true)
@@ -2677,7 +2969,7 @@ function deepCopy(obj1){
 
 缺陷：它会抛弃对象的constructor，深拷贝之后，不管这个对象原来的构造函数是什么，在深拷贝之后都会变成Object；这种方法能正确处理的对象只有 Number, String, Boolean, Array, 扁平对象，也就是说，只有可以转成JSON格式的对象才可以这样用，像function没办法转成JSON；
 
-```
+```js
 let obj1 = {
    fun:function(){
       alert(123);
@@ -2725,7 +3017,7 @@ console.log(obj1.b.f === obj2.b.f);  // false
 
 - slice是否为深拷贝
 
-```
+```js
 // 对只有一级属性值的数组对象使用slice
 var a = [1,2,3,4];
 var b = a.slice();
